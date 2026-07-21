@@ -46,7 +46,10 @@ export function WallpaperCard({
           {/* natural sizing — the image defines its own shape, so it never crops */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={renderUrl(w.storage_path, { width: 640 })}
+            src={renderUrl(w.storage_path, {
+              width: 640,
+              height: Math.round(640 * (w.height / w.width)),
+            })}
             alt={w.title}
             loading={priority ? "eager" : "lazy"}
             className="block h-auto w-full transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
