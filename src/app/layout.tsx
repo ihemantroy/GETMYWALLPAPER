@@ -23,7 +23,12 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg" },
 };
 
-export const viewport: Viewport = { themeColor: "#0A0A0D", colorScheme: "dark" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0A0A0D",
+  colorScheme: "dark",
+};
 
 const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
