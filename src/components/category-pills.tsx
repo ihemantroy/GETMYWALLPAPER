@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/types";
 
@@ -13,30 +16,32 @@ function withCategory(params: Record<string, string | undefined>, slug?: string)
 export function CategoryPills({
   categories, active, params,
 }: { categories: Category[]; active?: string; params: Record<string, string | undefined> }) {
+  const router = useRouter();
   if (categories.length === 0) return null;
-  return (
-    <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-1">
-      <Pill href={withCategory(params)} label="Everything" active={!active} />
-      {categories.map((c) => (
-        <Pill key={c.id} href={withCategory(params, c.slug)} label={c.name} count={c.count} active={active === c.slug} />
-      ))}
-    </div>
-  );
-}
 
-function Pill({ href, label, count, active }: { href: string; label: string; count?: number; active: boolean }) {
+  function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const slug = e.target.value;
+    router.push(withCategory(params, slug || undefined));
+  }
+
   return (
-    <Link
-      href={href}
-      className={cn(
-        "focusable inline-flex shrink-0 items-center gap-1.5 rounded-pill px-4 py-2 text-sm transition",
-        active ? "btn-accent font-semibold" : "surface text-chalk-muted hover:text-chalk",
-      )}
-    >
-      {label}
-      {typeof count === "number" && (
-        <span className={cn("text-xs", active ? "text-white/70" : "text-chalk-faint")}>{count}</span>
-      )}
-    </Link>
+    <div className="relative">
+      <select
+        value={active ?? ""}
+        onChange={onChange}
+        className="focusable surface w-full appearance-none rounded-pill px-4 py-2.5 pr-10 text-sm text-chalk"
+      >
+        <option value="">Everything</option>
+        {categories.map((c) => (
+          <option key={c.id} value={c.slug}>
+            {c.name}{typeof c.count === "number" ? ` (${c.count})` : ""}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-chalk-faint"
+      />
+    </div>
   );
 }
