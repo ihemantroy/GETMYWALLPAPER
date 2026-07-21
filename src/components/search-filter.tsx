@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, useEffect } from "react";
-import { Search, Monitor, Tablet, Smartphone, Heart } from "lucide-react";
+import { Search, Monitor, Tablet, Smartphone, Heart, ChevronDown } from "lucide-react";
 import { DEVICES, SORTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,25 @@ export function SearchFilter() {
         />
       </form>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* mobile: compact dropdowns */}
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        <Dropdown
+          value={device}
+          onChange={(v) => push((p) => { v ? p.set("device", v) : p.delete("device"); p.delete("view"); })}
+          options={[{ value: "", label: "All devices" }, ...DEVICES.map((d) => ({ value: d.slug, label: d.label }))]}
+        />
+        <Dropdown
+          value={favActive ? "favorites" : sort}
+          onChange={(v) => {
+            if (v === "favorites") push((p) => p.set("view", "favorites"));
+            else push((p) => { p.set("sort", v); p.delete("view"); });
+          }}
+          options={[...SORTS.map((s) => ({ value: s.slug, label: s.label })), { value: "favorites", label: "Favorites" }]}
+        />
+      </div>
+
+      {/* desktop / tablet: pill row */}
+      <div className="hidden flex-wrap items-center gap-2 sm:flex">
         <Pill active={!device && !favActive} onClick={() => push((p) => { p.delete("device"); p.delete("view"); })}>
           All
         </Pill>
@@ -76,6 +94,25 @@ export function SearchFilter() {
           </Pill>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Dropdown({
+  value, onChange, options,
+}: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="focusable surface w-full appearance-none rounded-pill px-4 py-2.5 pr-9 text-sm text-chalk"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <ChevronDown size={15} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-chalk-faint" />
     </div>
   );
 }
