@@ -79,7 +79,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
           </div>
         </aside>
 
-        <section>
+        <section className="min-w-0">
           <SearchFilter />
           {/* mobile categories */}
           <div className="mt-4 lg:hidden">
