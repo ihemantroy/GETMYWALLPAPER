@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Clash Display", system-ui, sans-serif;
+  --font-sans: "General Sans", system-ui, sans-serif;
+  --accent: #7C5CFF;
+  --accent-2: #FF3D6E;
+}
+
+* { border-color: theme("colors.line"); }
+html { scroll-behavior: smooth; }
+
+body {
+  background: #080809;
+  color: theme("colors.chalk.DEFAULT");
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+}
+
+/* PXL-style ambient: purple top-left, bold crimson sweep right, on deep dark */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(58rem 44rem at 6% -6%, rgba(124, 92, 255, 0.20), transparent 56%),
+    radial-gradient(62rem 52rem at 108% 20%, rgba(232, 40, 78, 0.22), transparent 56%),
+    radial-gradient(46rem 40rem at 78% 108%, rgba(226, 64, 96, 0.12), transparent 55%);
+  pointer-events: none;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@layer components {
+  /* the liquid glass material */
+  .surface {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: theme("boxShadow.glass");
+  }
+  .glass-strong {
+    background: rgba(20, 20, 26, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    box-shadow: theme("boxShadow.glass");
+  }
+  /* frosted caption strip laid over imagery — the signature look */
+  .glass-cap {
+    background: linear-gradient(to top, rgba(10,10,14,0.72), rgba(10,10,14,0.28));
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  .text-accent {
+    background: linear-gradient(100deg, var(--accent), var(--accent-2), #FF6A3D, var(--accent));
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+  @keyframes shimmer { to { background-position: 200% center; } }
+  .btn-accent {
+    background: linear-gradient(100deg, var(--accent), var(--accent-2));
+    color: #fff;
+    box-shadow: 0 8px 24px -8px rgba(124, 92, 255, 0.6), inset 0 1px 0 0 rgba(255,255,255,0.25);
+  }
+  .focusable { outline: none; }
+  .focusable:focus-visible { box-shadow: 0 0 0 2px #080809, 0 0 0 4px var(--accent); }
+  .masonry { column-gap: 1.15rem; }
+  .masonry > * { break-inside: avoid; margin-bottom: 1.15rem; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+::selection { background: rgba(124, 92, 255, 0.35); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
