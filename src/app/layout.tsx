@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { Nav } from "@/components/nav";
+import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ChromeGate } from "@/components/chrome-gate";
 import { Footer } from "@/components/footer";
 import { SITE } from "@/lib/constants";
@@ -32,6 +33,12 @@ export const viewport: Viewport = {
 
 const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
+async function NavWrapper() {
+  const user = await getSessionUser();
+  const admin = user ? await isAdmin() : false;
+  return <Nav admin={admin} userInitial={user?.email?.[0] ?? null} />;
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -44,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style>{`:root{--font-display:'Clash Display',system-ui,sans-serif;--font-sans:'General Sans',system-ui,sans-serif}`}</style>
       </head>
       <body>
-        <ChromeGate><Nav /></ChromeGate>
+        <ChromeGate><NavWrapper /></ChromeGate>
         <div className="min-h-screen">{children}</div>
         <ChromeGate><Footer /></ChromeGate>
         {adsenseClient && (
