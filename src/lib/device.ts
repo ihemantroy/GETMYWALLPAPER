@@ -20,3 +20,13 @@ export function detectScreen(): { w: number; h: number; dpr: number } {
     dpr,
   };
 }
+
+/** Auto-pick suitable devices from a wallpaper's aspect ratio. */
+export function suggestDevices(width: number, height: number): string[] {
+  if (!width || !height) return ["desktop"];
+  const r = width / height;
+  if (r >= 1.25) return ["desktop"];            // landscape → desktop / laptop
+  if (r <= 0.62) return ["phone"];              // tall portrait → phone
+  if (r < 0.9) return ["phone", "tablet"];      // moderate portrait → phone + tablet
+  return ["tablet", "desktop"];                 // near-square → tablet + desktop
+}

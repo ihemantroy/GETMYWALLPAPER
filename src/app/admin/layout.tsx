@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Upload, Inbox, Images, Tags, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Upload, Inbox, Images, Tags, DownloadCloud, ArrowLeft } from "lucide-react";
 import { isAdmin, getSessionUser } from "@/lib/auth";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/upload", label: "Upload", icon: Upload },
+  { href: "/admin/import", label: "Import (Pexels)", icon: DownloadCloud },
   { href: "/admin/queue", label: "Review queue", icon: Inbox },
   { href: "/admin/wallpapers", label: "Wallpapers", icon: Images },
   { href: "/admin/categories", label: "Categories", icon: Tags },

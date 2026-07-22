@@ -4,6 +4,7 @@ import "./globals.css";
 import { Nav } from "@/components/nav";
 import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ChromeGate } from "@/components/chrome-gate";
+import { PwaRegister } from "@/components/pwa-register";
 import { Footer } from "@/components/footer";
 import { SITE } from "@/lib/constants";
 
@@ -48,6 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=general-sans@400,500,600,700&display=swap"
         />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="GetYourWallpaper" />
         <style>{`:root{--font-display:'Clash Display',system-ui,sans-serif;--font-sans:'General Sans',system-ui,sans-serif}`}</style>
       </head>
       <body>

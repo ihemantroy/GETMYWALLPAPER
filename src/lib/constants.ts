@@ -8,7 +8,7 @@ export const SITE = {
 
 // Device filters (the pill row + per-device download sizes).
 export const DEVICES = [
-  { slug: "desktop", label: "Desktop", ratio: "16 / 9" },
+  { slug: "desktop", label: "Desktop / Laptop", ratio: "16 / 9" },
   { slug: "tablet", label: "Tablet", ratio: "3 / 4" },
   { slug: "phone", label: "Phone", ratio: "9 / 19.5" },
 ] as const;
@@ -40,3 +40,18 @@ export const NAV_LINKS = [
   { href: "/create", label: "Create" },
   { href: "/contribute", label: "Submit" },
 ];
+
+export const VIBES = [
+  { slug: "minimal", label: "Minimal" },
+  { slug: "dark", label: "Dark" },
+  { slug: "nature", label: "Nature" },
+  { slug: "abstract", label: "Abstract" },
+  { slug: "space", label: "Space" },
+  { slug: "aesthetic", label: "Aesthetic" },
+  { slug: "neon", label: "Neon" },
+  { slug: "anime", label: "Anime" },
+] as const;
+
+// public VAPID key for web-push (safe to ship to the browser)
+export const VAPID_PUBLIC_KEY =
+  "BPT0vn_-UEZqJZ4FCuid03fL-30avQQVBDviZGNHSBnwpkgT-JTzERtommpv7zbj6T59Kl9F81Y6VjId8o67MVg";

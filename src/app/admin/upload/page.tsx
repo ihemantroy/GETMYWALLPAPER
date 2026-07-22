@@ -7,6 +7,7 @@ import { createWallpaper } from "@/app/admin/actions";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { DEVICES } from "@/lib/constants";
+import { suggestDevices } from "@/lib/device";
 import type { Category } from "@/lib/types";
 import { slugify, formatBytes } from "@/lib/utils";
 
@@ -28,7 +29,10 @@ function readDimensions(file: File): Promise<{ w: number; h: number }> {
 
 export default function AdminUploadPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [device, setDevice] = useState("desktop");
+  const [devices, setDevices] = useState<string[]>(["desktop"]);
+  const [autoDevices, setAutoDevices] = useState(true);
+  const [credit, setCredit] = useState("");
+  const [creditUrl, setCreditUrl] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
@@ -74,6 +78,7 @@ export default function AdminUploadPage() {
       try {
         const { file, name } = items[i];
         const { w, h } = await readDimensions(file);
+        const useDevices = autoDevices ? suggestDevices(w, h) : devices;
         const ext = file.name.split(".").pop() || "jpg";
         const path = `admin/${crypto.randomUUID()}.${ext}`;
 
@@ -88,8 +93,11 @@ export default function AdminUploadPage() {
           width: w,
           height: h,
           file_size: file.size,
-          device,
+          device: useDevices[0] ?? "desktop",
+          devices: useDevices,
           category_id: categoryId || null,
+          credit: credit || null,
+          credit_url: creditUrl || null,
           tags: tagList,
           scheduled_for: schedule || null,
           is_featured: featured,
@@ -129,19 +137,33 @@ export default function AdminUploadPage() {
 
       <GlassCard interactive={false} className="mt-5 grid gap-4 p-5 sm:grid-cols-2">
         <div>
-          <p className="mb-2 text-sm font-medium">Device category</p>
-          <div className="flex flex-wrap gap-2">
-            {DEVICES.map((d) => (
-              <button
-                key={d.slug}
-                onClick={() => setDevice(d.slug)}
-                className={`focusable rounded-pill px-3.5 py-1.5 text-xs font-medium transition ${
-                  device === d.slug ? "btn-accent" : "surface text-chalk-muted hover:text-chalk"
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={autoDevices} onChange={(e) => setAutoDevices(e.target.checked)} className="h-4 w-4 accent-[#7C5CFF]" />
+            Auto-detect devices from each image
+          </label>
+          <p className={`mb-2 text-sm font-medium ${autoDevices ? "opacity-40" : ""}`}>Or set manually <span className="text-chalk-faint">(pick one or more)</span></p>
+          <div className={`flex flex-wrap gap-2 ${autoDevices ? "pointer-events-none opacity-40" : ""}`}>
+            {DEVICES.map((d) => {
+              const on = devices.includes(d.slug);
+              return (
+                <button
+                  key={d.slug}
+                  type="button"
+                  onClick={() =>
+                    setDevices((prev) =>
+                      prev.includes(d.slug)
+                        ? (prev.length > 1 ? prev.filter((x) => x !== d.slug) : prev)
+                        : [...prev, d.slug],
+                    )
+                  }
+                  className={`focusable rounded-pill px-3.5 py-1.5 text-xs font-medium transition ${
+                    on ? "btn-accent" : "surface text-chalk-muted hover:text-chalk"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div>
@@ -168,6 +190,24 @@ export default function AdminUploadPage() {
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="cyberpunk, neon, dark"
+            className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
+          />
+        </div>
+        <div>
+          <p className="mb-2 text-sm font-medium">Credit <span className="text-chalk-faint">(creator / owner)</span></p>
+          <input
+            value={credit}
+            onChange={(e) => setCredit(e.target.value)}
+            placeholder="e.g. @artist or Photographer Name"
+            className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
+          />
+        </div>
+        <div>
+          <p className="mb-2 text-sm font-medium">Credit link <span className="text-chalk-faint">(optional)</span></p>
+          <input
+            value={creditUrl}
+            onChange={(e) => setCreditUrl(e.target.value)}
+            placeholder="https://instagram.com/artist"
             className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
           />
         </div>

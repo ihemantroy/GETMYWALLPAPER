@@ -18,17 +18,18 @@ export function AdSlot({
   label?: string;
 }) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+  const adSlot = slot ?? process.env.NEXT_PUBLIC_ADSENSE_SLOT;
   const ref = useRef<HTMLModElement>(null);
 
   useEffect(() => {
-    if (!client || !ref.current) return;
+    if (!client || !adSlot || !ref.current) return;
     try {
       // @ts-expect-error adsbygoogle is injected by the AdSense script
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {}
-  }, [client]);
+  }, [client, adSlot]);
 
-  if (!client) return null;
+  if (!client || !adSlot) return null;
 
   return (
     <div className={cn("surface rounded-card p-3", className)}>
@@ -38,7 +39,7 @@ export function AdSlot({
         className="adsbygoogle block"
         style={{ display: "block" }}
         data-ad-client={client}
-        data-ad-slot={slot}
+        data-ad-slot={adSlot}
         data-ad-format="auto"
         data-full-width-responsive="true"
       />

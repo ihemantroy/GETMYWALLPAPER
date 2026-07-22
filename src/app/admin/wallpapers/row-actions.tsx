@@ -1,23 +1,37 @@
 "use client";
 
 import { useTransition } from "react";
-import { Star, Trash2, Loader2 } from "lucide-react";
-import { deleteWallpaper, toggleFeatured } from "@/app/admin/actions";
+import { Star, Trash2, Loader2, Sun } from "lucide-react";
+import { deleteWallpaper, toggleFeatured, setWotd } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
 
 export function WallpaperRowActions({
   id,
   storagePath,
   featured,
+  wotd,
 }: {
   id: string;
   storagePath: string;
   featured: boolean;
+  wotd: boolean;
 }) {
   const [pending, start] = useTransition();
 
   return (
     <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => start(() => setWotd(id, !wotd))}
+        disabled={pending}
+        aria-label={wotd ? "Unset Wallpaper of the Day" : "Set Wallpaper of the Day"}
+        title="Wallpaper of the Day"
+        className={cn(
+          "focusable surface grid h-9 w-9 place-items-center rounded-pill transition",
+          wotd ? "text-accent-2" : "text-chalk-muted hover:text-chalk",
+        )}
+      >
+        <Sun size={15} fill={wotd ? "currentColor" : "none"} />
+      </button>
       <button
         onClick={() => start(() => toggleFeatured(id, !featured))}
         disabled={pending}

@@ -8,7 +8,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { DEVICES } from "@/lib/constants";
 import type { Category } from "@/lib/types";
-import { slugify } from "@/lib/utils";
+import { suggestDevices } from "@/lib/device";
 
 /** Read intrinsic dimensions without uploading. */
 function readDimensions(file: File): Promise<{ w: number; h: number }> {
@@ -21,22 +21,21 @@ function readDimensions(file: File): Promise<{ w: number; h: number }> {
 }
 
 export default function ContributePage() {
-  const [authed, setAuthed] = useState<boolean | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [device, setDevice] = useState("desktop");
+  const [devices, setDevices] = useState<string[]>(["desktop"]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
+  const [credit, setCredit] = useState("");
+  const [creditUrl, setCreditUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setAuthed(Boolean(data.user)));
-    supabase
+    createClient()
       .from("categories")
       .select("id, slug, name, sort_order")
       .order("sort_order")
@@ -48,101 +47,82 @@ export default function ContributePage() {
     setFile(f);
     setPreview(URL.createObjectURL(f));
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+    // auto-pick suitable devices from the image shape
+    readDimensions(f).then(({ w, h }) => setDevices(suggestDevices(w, h)));
   }
 
   async function submit() {
     if (!file || !title) return;
     setBusy(true);
     setError(null);
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Please sign in again.");
+    try {
+      const { w, h } = await readDimensions(file);
+      const ext = file.name.split(".").pop() || "jpg";
+
+      // 1) get a one-time signed upload URL from the server
+      const signRes = await fetch("/api/submit/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType: file.type, ext }),
+      });
+      const sign = await signRes.json();
+      if (!signRes.ok) throw new Error(sign.error || "Could not start upload");
+
+      // 2) upload the file straight to storage (bypasses server size limits)
+      const supabase = createClient();
+      const { error: upErr } = await supabase.storage
+        .from("wallpapers")
+        .uploadToSignedUrl(sign.path, sign.token, file);
+      if (upErr) throw new Error(upErr.message);
+
+      // 3) record it in the review queue
+      const finRes = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title, path: sign.path, width: w, height: h, fileSize: file.size,
+          device: devices[0] ?? "desktop", devices, categoryId: categoryId || null, tags,
+          credit, creditUrl,
+        }),
+      });
+      const fin = await finRes.json();
+      if (!finRes.ok) throw new Error(fin.error || "Submission failed");
+
+      setDone(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    const { w, h } = await readDimensions(file);
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `community/${user.id}/${crypto.randomUUID()}.${ext}`;
-
-    const { error: upErr } = await supabase.storage.from("wallpapers").upload(path, file, {
-      cacheControl: "31536000",
-      upsert: false,
-    });
-    if (upErr) {
-      setError(upErr.message);
-      setBusy(false);
-      return;
-    }
-
-    const { error: insErr } = await supabase.from("wallpapers").insert({
-      slug: `${slugify(title)}-${Date.now().toString(36)}`,
-      title,
-      storage_path: path,
-      width: w,
-      height: h,
-      file_size: file.size,
-      orientation: w >= h ? "landscape" : "portrait",
-      device,
-      category_id: categoryId || null,
-      tags: tags.split(",").map((t) => slugify(t.trim())).filter(Boolean),
-      status: "pending",
-      is_community: true,
-      uploader_id: user.id,
-    });
-
-    setBusy(false);
-    if (insErr) setError(insErr.message);
-    else setDone(true);
   }
 
   return (
     <div className="mx-auto max-w-2xl px-6 pb-16 pt-28">
       <h1 className="mb-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Contribute a wallpaper</h1>
       <p className="mb-8 text-chalk-muted">
-        Submissions go to our review queue. Approved wallpapers publish automatically with credit to you.
+        No account needed — submissions go to our review queue. Approved wallpapers publish automatically.
       </p>
 
-      {authed === false && (
-        <GlassCard interactive={false} className="p-8 text-center">
-          <p className="text-chalk-muted">You&apos;ll need an account to contribute.</p>
-          <GlassButton href="/auth/login" variant="iris" size="lg" className="mt-4">
-            Sign in to continue
-          </GlassButton>
-        </GlassCard>
-      )}
-
-      {authed && done && (
+      {done ? (
         <GlassCard interactive={false} className="p-8 text-center">
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-pill bg-accent/15">
             <Check className="text-accent" size={26} />
           </div>
           <h2 className="font-display text-2xl font-semibold">Submitted for review</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-chalk-muted">
-            Thanks — a curator will take a look. You&apos;ll see it live once approved.
+            Thanks — a curator will take a look. It goes live once approved.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <GlassButton href="/" variant="glass">Browse wallpapers</GlassButton>
             <GlassButton
               variant="iris"
-              onClick={() => {
-                setDone(false);
-                setFile(null);
-                setPreview(null);
-                setTitle("");
-                setTags("");
-              }}
+              onClick={() => { setDone(false); setFile(null); setPreview(null); setTitle(""); setTags(""); }}
             >
               Submit another
             </GlassButton>
           </div>
         </GlassCard>
-      )}
-
-      {authed && !done && (
+      ) : (
         <GlassCard interactive={false} className="space-y-5 p-6 md:p-8">
           <label className="block">
             <span className="mb-2 block text-sm font-medium">Image</span>
@@ -174,19 +154,29 @@ export default function ContributePage() {
             />
           </Field>
 
-          <Field label="Best for">
+          <Field label="Works on" hint="pick one or more">
             <div className="flex flex-wrap gap-2">
-              {DEVICES.map((d) => (
-                <button
-                  key={d.slug}
-                  onClick={() => setDevice(d.slug)}
-                  className={`focusable rounded-pill px-4 py-2 text-xs font-medium transition ${
-                    device === d.slug ? "btn-accent" : "surface text-chalk-muted hover:text-chalk"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
+              {DEVICES.map((d) => {
+                const on = devices.includes(d.slug);
+                return (
+                  <button
+                    key={d.slug}
+                    type="button"
+                    onClick={() =>
+                      setDevices((prev) =>
+                        prev.includes(d.slug)
+                          ? (prev.length > 1 ? prev.filter((x) => x !== d.slug) : prev)
+                          : [...prev, d.slug],
+                      )
+                    }
+                    className={`focusable rounded-pill px-4 py-2 text-xs font-medium transition ${
+                      on ? "btn-accent" : "surface text-chalk-muted hover:text-chalk"
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
             </div>
           </Field>
 
@@ -208,6 +198,24 @@ export default function ContributePage() {
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="cyberpunk, neon, dark"
+              className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
+            />
+          </Field>
+
+          <Field label="Credit" hint="your name / handle, or the original creator">
+            <input
+              value={credit}
+              onChange={(e) => setCredit(e.target.value)}
+              placeholder="e.g. @yourhandle"
+              className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
+            />
+          </Field>
+
+          <Field label="Credit link" hint="optional — link to the creator">
+            <input
+              value={creditUrl}
+              onChange={(e) => setCreditUrl(e.target.value)}
+              placeholder="https://instagram.com/yourhandle"
               className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint"
             />
           </Field>

@@ -4,8 +4,9 @@ import { renderUrl } from "@/lib/supabase/storage";
 import { GlassCard } from "@/components/ui/glass-card";
 import { EmptyState } from "@/components/empty-state";
 import { WallpaperRowActions } from "@/app/admin/wallpapers/row-actions";
+import { WallpaperEditor } from "@/app/admin/wallpapers/editor";
 import { formatCount } from "@/lib/utils";
-import type { Wallpaper } from "@/lib/types";
+import type { Wallpaper, Category } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,8 @@ export default async function AdminWallpapers() {
     .order("created_at", { ascending: false })
     .limit(100);
   const items = (data ?? []) as Wallpaper[];
+  const { data: cats } = await admin.from("categories").select("id, slug, name, sort_order").order("sort_order");
+  const categories = (cats ?? []) as Category[];
 
   return (
     <div className="max-w-4xl">
@@ -36,10 +39,13 @@ export default async function AdminWallpapers() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{w.title}</p>
                 <p className="text-xs text-chalk-faint">
-                  {w.status === "scheduled" ? "Scheduled" : "Published"} · {formatCount(w.download_count)} downloads · {w.device}
+                  {w.status === "scheduled" ? "Scheduled" : "Published"} · {formatCount(w.download_count)} downloads · {(w.devices && w.devices.length ? w.devices : [w.device]).join(", ")}
                 </p>
               </div>
-              <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} />
+              <div className="flex items-center gap-1.5">
+                <WallpaperEditor w={w} categories={categories} />
+                <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} wotd={w.is_wotd} />
+              </div>
             </GlassCard>
           ))
         )}

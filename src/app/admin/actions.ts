@@ -17,8 +17,11 @@ export async function createWallpaper(input: {
   height: number;
   file_size: number;
   device: string;
+  devices?: string[];
   tags: string[];
   category_id?: string | null;
+  credit?: string | null;
+  credit_url?: string | null;
   description?: string;
   scheduled_for?: string | null;
   is_featured?: boolean;
@@ -36,7 +39,10 @@ export async function createWallpaper(input: {
     file_size: input.file_size,
     orientation: input.width >= input.height ? "landscape" : "portrait",
     device: input.device,
+    devices: input.devices && input.devices.length ? input.devices : [input.device],
     category_id: input.category_id ?? null,
+    credit: input.credit?.trim() || null,
+    credit_url: input.credit_url?.trim() || null,
     tags: input.tags,
     is_featured: input.is_featured ?? false,
     status: scheduled ? "scheduled" : "published",
@@ -44,6 +50,28 @@ export async function createWallpaper(input: {
     published_at: scheduled ? null : new Date().toISOString(),
   });
   if (error) throw new Error(error.message);
+  revalidatePath("/");
+}
+
+export async function updateWallpaper(
+  id: string,
+  input: { title?: string; category_id?: string | null; devices?: string[]; tags?: string[]; credit?: string | null; credit_url?: string | null },
+) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  const patch: Record<string, unknown> = {};
+  if (typeof input.title === "string" && input.title.trim()) patch.title = input.title.trim();
+  if (input.category_id !== undefined) patch.category_id = input.category_id || null;
+  if (input.devices && input.devices.length) {
+    patch.devices = input.devices;
+    patch.device = input.devices[0];
+  }
+  if (input.tags) patch.tags = input.tags;
+  if (input.credit !== undefined) patch.credit = input.credit?.trim() || null;
+  if (input.credit_url !== undefined) patch.credit_url = input.credit_url?.trim() || null;
+  const { error } = await admin.from("wallpapers").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/wallpapers");
   revalidatePath("/");
 }
 
@@ -65,6 +93,20 @@ export async function rejectWallpaper(id: string) {
   const { error } = await admin.from("wallpapers").update({ status: "rejected" }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/queue");
+}
+
+export async function setWotd(id: string, next: boolean) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  if (next) {
+    // only one at a time — clear any existing WOTD first
+    await admin.from("wallpapers").update({ is_wotd: false }).eq("is_wotd", true);
+    await admin.from("wallpapers").update({ is_wotd: true }).eq("id", id);
+  } else {
+    await admin.from("wallpapers").update({ is_wotd: false }).eq("id", id);
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/wallpapers");
 }
 
 export async function deleteWallpaper(id: string, storage_path: string) {

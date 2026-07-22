@@ -9,6 +9,8 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { DownloadCounter } from "@/components/download-counter";
 import { ShareButton } from "@/components/share-button";
 import { AdSlot } from "@/components/ad-slot";
+import { AmbientTint } from "@/components/ambient-tint";
+import { PaletteStrip } from "@/components/palette-strip";
 import { renderUrl, publicUrl } from "@/lib/supabase/storage";
 import { formatCount } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
@@ -52,6 +54,7 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16 pt-28">
+      <AmbientTint src={renderUrl(w.storage_path, { width: 48 })} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <nav className="mb-6 flex items-center gap-2 text-sm text-chalk-muted">
@@ -71,6 +74,18 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
             <DownloadCounter initial={w.download_count} />
             <span className="inline-flex items-center gap-1"><Heart size={14} /> {formatCount(w.like_count)}</span>
           </div>
+          {w.credit && (
+            <p className="mt-2 text-sm text-chalk-muted">
+              Credit:{" "}
+              {w.credit_url ? (
+                <a href={w.credit_url} target="_blank" rel="noopener noreferrer" className="text-chalk underline underline-offset-2 hover:text-accent">
+                  {w.credit}
+                </a>
+              ) : (
+                <span className="text-chalk">{w.credit}</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <ShareButton slug={w.slug} />
@@ -79,6 +94,10 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
       </div>
 
       <DevicePreview w={w} />
+
+      <PaletteStrip src={renderUrl(w.storage_path, { width: 200 })} />
+
+      <AdSlot className="mt-6" label="Sponsored" />
 
       {w.tags && w.tags.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">

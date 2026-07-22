@@ -22,11 +22,15 @@ export interface Wallpaper {
   palette: string[] | null;
   orientation: "portrait" | "landscape" | "square";
   device: string;
+  devices: string[] | null;
   category: string | null;
   category_id: string | null;
   tags: string[] | null;
+  credit: string | null;
+  credit_url: string | null;
   status: WallpaperStatus;
   is_featured: boolean;
+  is_wotd: boolean;
   view_count: number;
   download_count: number;
   like_count: number;
