@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import Script from "next/script";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ChromeGate } from "@/components/chrome-gate";
 import { PwaRegister } from "@/components/pwa-register";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Footer } from "@/components/footer";
 import { SITE } from "@/lib/constants";
 

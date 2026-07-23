@@ -40,6 +40,14 @@ export function PaletteStrip({ src }: { src: string }) {
 
   if (colors.length === 0) return null;
 
+  function copyAll() {
+    const css = `:root {\n${colors.map((h, i) => `  --color-${i + 1}: ${h};`).join("\n")}\n}`;
+    navigator.clipboard?.writeText(css).then(() => {
+      setCopied("__all__");
+      setTimeout(() => setCopied(null), 1400);
+    });
+  }
+
   function copy(hex: string) {
     navigator.clipboard?.writeText(hex).then(() => {
       setCopied(hex);
@@ -63,6 +71,14 @@ export function PaletteStrip({ src }: { src: string }) {
             {copied === hex ? <Check size={12} className="text-accent" /> : <Copy size={12} className="text-chalk-faint group-hover:text-chalk" />}
           </button>
         ))}
+        <button
+          onClick={copyAll}
+          className="focusable surface inline-flex items-center gap-2 rounded-pill px-3 py-1.5 text-xs font-medium text-chalk-muted transition hover:text-chalk"
+          title="Copy all as CSS variables"
+        >
+          {copied === "__all__" ? <Check size={12} className="text-accent" /> : <Copy size={12} />}
+          {copied === "__all__" ? "Copied CSS" : "Copy all as CSS"}
+        </button>
       </div>
     </div>
   );

@@ -4,9 +4,10 @@ import { useEffect } from "react";
 
 export function PwaRegister() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch((err) => console.warn("Service worker registration failed:", err));
   }, []);
   return null;
 }

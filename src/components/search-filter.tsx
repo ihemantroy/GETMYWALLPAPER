@@ -41,6 +41,7 @@ export function SearchFilter() {
       <form onSubmit={submitSearch} className="relative">
         <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-chalk-faint" />
         <input
+          id="site-search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search wallpapers, vibes, colors…"

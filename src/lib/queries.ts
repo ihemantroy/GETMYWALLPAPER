@@ -51,15 +51,15 @@ export async function getWallpapers(params: BrowseParams = {}): Promise<Wallpape
   return data ?? [];
 }
 
-export async function getFeatured(limit = 6): Promise<Wallpaper[]> {
+export async function getFeatured(limit = 6, device?: string): Promise<Wallpaper[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  let q = supabase
     .from("wallpapers")
     .select("*")
     .eq("status", "published")
-    .eq("is_featured", true)
-    .order("published_at", { ascending: false })
-    .limit(limit);
+    .eq("is_featured", true);
+  if (device) q = q.contains("devices", [device]);
+  const { data } = await q.order("published_at", { ascending: false }).limit(limit);
   return data ?? [];
 }
 
@@ -116,16 +116,30 @@ export async function getWallpapersPage(
   return { items: data ?? [], total: count ?? 0 };
 }
 
-export async function getWallpaperOfTheDay(): Promise<Wallpaper | null> {
+export async function getWallpaperOfTheDay(device?: string): Promise<Wallpaper | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  let q = supabase
     .from("wallpapers")
     .select("*")
     .eq("status", "published")
-    .eq("is_wotd", true)
-    .limit(1)
-    .maybeSingle();
-  return data ?? null;
+    .eq("is_wotd", true);
+  if (device) q = q.contains("devices", [device]);
+  const { data } = await q.limit(1).maybeSingle();
+  if (data) return data;
+
+  // The pinned pick isn't available for this device — show that device's newest instead.
+  if (device) {
+    const { data: fallback } = await supabase
+      .from("wallpapers")
+      .select("*")
+      .eq("status", "published")
+      .contains("devices", [device])
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return fallback ?? null;
+  }
+  return null;
 }
 
 export async function getDailyForVibe(vibe?: string): Promise<Wallpaper | null> {

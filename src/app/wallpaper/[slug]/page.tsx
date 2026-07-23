@@ -97,8 +97,6 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
 
       <PaletteStrip src={renderUrl(w.storage_path, { width: 200 })} />
 
-      <AdSlot className="mt-6" label="Sponsored" />
-
       {w.tags && w.tags.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {w.tags.map((t) => (

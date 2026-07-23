@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Shuffle, Download, Sun } from "lucide-react";
 import { getWallpapersPage, getCategories, getFeatured, getWallpaperOfTheDay, PER_PAGE } from "@/lib/queries";
@@ -11,6 +12,8 @@ import { FavoritesView } from "@/components/favorites-view";
 import { Countdown } from "@/components/countdown";
 import { Pagination } from "@/components/pagination";
 import { YourDaily } from "@/components/your-daily";
+import { DeviceSwitcher } from "@/components/device-switcher";
+import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
 
 export const revalidate = 120;
@@ -30,13 +33,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
     page: page > 1 ? String(page) : undefined,
   };
   const isFav = params.view === "favorites";
-  const filtering = Boolean(params.category || params.device || params.q || isFav);
+  const filtering = Boolean(params.category || params.q || isFav); // device alone still shows the full homepage
   const showIntro = !filtering && page === 1; // hero + featured only on the clean first page
 
   const [categories, featured, wotd, pageData] = await Promise.all([
     getCategories(),
-    showIntro ? getFeatured(4) : Promise.resolve([]),
-    showIntro ? getWallpaperOfTheDay() : Promise.resolve(null),
+    showIntro ? getFeatured(4, params.device) : Promise.resolve([]),
+    showIntro ? getWallpaperOfTheDay(params.device) : Promise.resolve(null),
     isFav ? Promise.resolve({ items: [], total: 0 }) : getWallpapersPage({
       category: params.category, device: params.device,
       sort: params.sort ?? "latest", q: params.q, page,
@@ -47,6 +50,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-8">
+      <Suspense fallback={null}><DeviceWelcome /></Suspense>
       {showIntro && (
         <>
           <section className="mb-10 max-w-3xl">
@@ -63,6 +67,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               </a>
             </div>
           </section>
+
+          <Suspense fallback={null}><DeviceSwitcher /></Suspense>
 
           {wotd && (
             <section className="mb-12">

@@ -23,6 +23,7 @@ export function YourDaily() {
   const [daily, setDaily] = useState<Daily>(null);
   const [loading, setLoading] = useState(false);
   const [subState, setSubState] = useState<"idle" | "working" | "on" | "unsupported" | "denied">("idle");
+  const [pushErr, setPushErr] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
@@ -48,24 +49,64 @@ export function YourDaily() {
 
   async function enableReminders() {
     if (!vibe) return;
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) { setSubState("unsupported"); return; }
+    setPushErr(null);
+
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setSubState("unsupported");
+      return;
+    }
+    if (!window.isSecureContext) {
+      setSubState("idle");
+      setPushErr("Reminders need a secure (https) connection.");
+      return;
+    }
+
     setSubState("working");
     try {
-      const reg = await navigator.serviceWorker.ready;
+      // 1) Ask permission FIRST, while the click gesture is still fresh.
       const perm = await Notification.requestPermission();
-      if (perm !== "granted") { setSubState("denied"); return; }
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      await fetch("/api/push/subscribe", {
+      if (perm !== "granted") {
+        setSubState(perm === "denied" ? "denied" : "idle");
+        if (perm !== "denied") setPushErr("Permission dismissed — tap again and choose Allow.");
+        return;
+      }
+
+      // 2) Make sure a service worker is actually registered and active.
+      //    navigator.serviceWorker.ready never resolves when none exists, so
+      //    register explicitly and race it against a timeout.
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) reg = await navigator.serviceWorker.register("/sw.js");
+
+      const activeReg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Service worker did not start. Reload the page and try again.")), 10000),
+        ),
+      ]);
+
+      // 3) Reuse an existing subscription if the browser already has one.
+      let sub = await activeReg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await activeReg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+
+      // 4) Save it — and surface the real reason if the server rejects it.
+      const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription: sub.toJSON(), vibe }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Could not save your reminder. Try again shortly.");
+      }
       setSubState("on");
-    } catch {
+    } catch (e) {
       setSubState("idle");
+      setPushErr(e instanceof Error ? e.message : "Could not turn on reminders.");
     }
   }
 
@@ -123,6 +164,7 @@ export function YourDaily() {
             </button>
             {subState === "unsupported" && <p className="mt-2 text-xs text-chalk-faint">Tip: install the app (Add to Home Screen) to enable reminders on your phone.</p>}
             {subState === "denied" && <p className="mt-2 text-xs text-accent-2">Notifications were blocked — enable them in your browser settings.</p>}
+            {pushErr && <p className="mt-2 text-xs text-accent-2">{pushErr}</p>}
           </div>
         </div>
       )}
