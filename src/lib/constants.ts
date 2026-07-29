@@ -73,6 +73,15 @@ export const KEYWORD_TOPICS = [
   { slug: "gradient", label: "Gradient" },
 ] as const;
 
+// iOS Shortcuts integration ("Set as wallpaper" without manual download).
+// After building the shortcuts in the Shortcuts app (see SHORTCUTS-SETUP.md),
+// paste their iCloud share links below.
+export const SHORTCUTS = {
+  setWallpaperName: "Set GetYourWallpaper", // must EXACTLY match the shortcut's name
+  setWallpaperInstallUrl: "", // https://www.icloud.com/shortcuts/xxxxxxxx
+  dailyInstallUrl: "", // https://www.icloud.com/shortcuts/yyyyyyyy (auto-daily)
+};
+
 // public VAPID key for web-push (safe to ship to the browser)
 export const VAPID_PUBLIC_KEY =
   "BPT0vn_-UEZqJZ4FCuid03fL-30avQQVBDviZGNHSBnwpkgT-JTzERtommpv7zbj6T59Kl9F81Y6VjId8o67MVg";

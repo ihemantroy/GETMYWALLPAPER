@@ -76,7 +76,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                 href={`/wallpaper/${wotd.slug}`}
                 className="group relative block overflow-hidden rounded-xl2 ring-1 ring-white/10"
               >
-                <div className="relative aspect-[16/8] w-full sm:aspect-[16/6]">
+                <div
+                  className={
+                    params.device === "phone"
+                      ? "relative aspect-[4/5] w-full sm:aspect-[3/4]"
+                      : params.device === "tablet"
+                        ? "relative aspect-[3/4] w-full"
+                        : "relative aspect-[16/8] w-full sm:aspect-[16/6]"
+                  }
+                >
                   <img
                     src={renderUrl(wotd.storage_path, { width: 1600 })}
                     alt={wotd.title}
