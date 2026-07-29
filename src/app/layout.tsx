@@ -1,43 +1,74 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { LayoutDashboard, Upload, Inbox, Images, Tags, DownloadCloud, ArrowLeft } from "lucide-react";
-import { isAdmin, getSessionUser } from "@/lib/auth";
+import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+import Script from "next/script";
+import "./globals.css";
+import { Nav } from "@/components/nav";
+import { getSessionUser, isAdmin } from "@/lib/auth";
+import { ChromeGate } from "@/components/chrome-gate";
+import { PwaRegister } from "@/components/pwa-register";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
+import { Footer } from "@/components/footer";
+import { SITE } from "@/lib/constants";
 
-const links = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/upload", label: "Upload", icon: Upload },
-  { href: "/admin/import", label: "Import (Pexels)", icon: DownloadCloud },
-  { href: "/admin/queue", label: "Review queue", icon: Inbox },
-  { href: "/admin/wallpapers", label: "Wallpapers", icon: Images },
-  { href: "/admin/categories", label: "Categories", icon: Tags },
-];
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com";
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: { default: `${SITE.name} — ${SITE.tagline}`, template: `%s — ${SITE.name}` },
+  description: SITE.description,
+  applicationName: SITE.name,
+  keywords: ["wallpapers", "4k wallpapers", "iphone wallpapers", "desktop wallpapers", "aesthetic wallpapers"],
+  openGraph: {
+    type: "website", url: siteUrl, siteName: SITE.name,
+    title: `${SITE.name} — ${SITE.tagline}`, description: SITE.description,
+  },
+  twitter: { card: "summary_large_image", title: SITE.name, description: SITE.description },
+  robots: { index: true, follow: true },
+  verification: { google: "atnxPpuz7uE_i-7wrTed-LjQsjxGBsNsTuHXIVQYFHQ" },
+  icons: { icon: "/favicon.svg" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0A0A0D",
+  colorScheme: "dark",
+};
+
+const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+
+async function NavWrapper() {
   const user = await getSessionUser();
-  if (!user) redirect("/auth/login?next=/admin");
-  if (!(await isAdmin())) redirect("/");
+  const admin = user ? await isAdmin() : false;
+  return <Nav admin={admin} userInitial={user?.email?.[0] ?? null} />;
+}
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
-      <aside className="surface sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-1 rounded-none border-y-0 border-l-0 p-4 md:flex">
-        <Link href="/" className="mb-4 flex items-center gap-2 px-3 py-2 text-sm text-chalk-muted hover:text-chalk">
-          <ArrowLeft size={15} /> Back to site
-        </Link>
-        <p className="px-3 pb-2 font-display text-lg font-semibold">
-          <span className="text-accent">Get</span>YW Admin
-        </p>
-        {links.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="focusable flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-chalk-muted transition hover:bg-white/5 hover:text-chalk"
-          >
-            <Icon size={17} /> {label}
-          </Link>
-        ))}
-        <p className="mt-auto px-3 text-xs text-chalk-faint">{user.email}</p>
-      </aside>
-      <div className="flex-1 px-6 py-8 md:px-10">{children}</div>
-    </div>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=general-sans@400,500,600,700&display=swap"
+        />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="GetYourWallpaper" />
+        <style>{`:root{--font-display:'Clash Display',system-ui,sans-serif;--font-sans:'General Sans',system-ui,sans-serif}`}</style>
+      </head>
+      <body>
+        <ChromeGate><NavWrapper /></ChromeGate>
+        <div className="min-h-screen">{children}</div>
+        <ChromeGate><Footer /></ChromeGate>
+        {adsenseClient && (
+          <Script
+            id="adsense" async strategy="afterInteractive" crossOrigin="anonymous"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+          />
+        )}
+      </body>
+    </html>
   );
 }
