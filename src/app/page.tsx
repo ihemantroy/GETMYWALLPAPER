@@ -86,7 +86,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                   }
                 >
                   <img
-                    src={renderUrl(wotd.storage_path, { width: 1600 })}
+                    src={renderUrl(wotd.storage_path, { width: 1600, quality: 90 })}
                     alt={wotd.title}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] group-hover:scale-105"
                   />

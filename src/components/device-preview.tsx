@@ -16,7 +16,7 @@ const FRAMES: { key: DeviceKind; icon: typeof Smartphone; label: string }[] = [
   { key: "tablet", icon: Tablet, label: "Tablet" },
 ];
 
-type Res = { label: string; w: number; h: number; mine?: boolean };
+type Res = { label: string; w: number; h: number; mine?: boolean; original?: boolean };
 
 function useClock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -50,19 +50,20 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
     if (w0 && h0) setMyScreen({ label: "Your screen", w: w0, h: h0, mine: true });
   }, []);
 
-  // build options: put "Your screen" first when it matches this frame's orientation
+  // build options: Original (full-res, uncompressed) first, then "Your screen", then presets
   const options: Res[] = useMemo(() => {
     const base = RESOLUTIONS[frame] ?? RESOLUTIONS.desktop;
+    const list: Res[] = [{ label: "Original", w: w.width, h: w.height, original: true }];
     if (myScreen) {
       const portrait = myScreen.h > myScreen.w;
       const frameIsPortrait = frame === "phone" || frame === "tablet";
-      if (portrait === frameIsPortrait) return [myScreen, ...base];
+      if (portrait === frameIsPortrait) list.push(myScreen);
     }
-    return base;
-  }, [frame, myScreen]);
+    return [...list, ...base];
+  }, [frame, myScreen, w.width, w.height]);
 
   const chosen = options[Math.min(resIndex, options.length - 1)];
-  const preview = useMemo(() => renderUrl(w.storage_path, { width: 900 }), [w.storage_path]);
+  const preview = useMemo(() => renderUrl(w.storage_path, { width: 1000, quality: 90 }), [w.storage_path]);
 
   async function download() {
     setBusy(true);
@@ -70,12 +71,17 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
       await fetch(`/api/download/${w.id}`, { method: "POST" }).catch(() => {});
       window.dispatchEvent(new Event("wallpaper-downloaded"));
 
-      const filename = `${w.slug}-${chosen.w}x${chosen.h}.jpg`;
-      // deliver the wallpaper resized to the EXACT chosen resolution
-      const fitted = renderUrl(w.storage_path, { width: chosen.w, height: chosen.h, quality: 92 });
+      const filename = chosen.original
+        ? `${w.slug}-original-${w.width}x${w.height}.jpg`
+        : `${w.slug}-${chosen.w}x${chosen.h}.jpg`;
+      // Original = the untouched full-resolution file (no re-compression);
+      // otherwise fit to the exact chosen pixels at near-lossless quality.
+      const src = chosen.original
+        ? publicUrl(w.storage_path)
+        : renderUrl(w.storage_path, { width: chosen.w, height: chosen.h, quality: 95 });
       try {
-        const res = await fetch(fitted);
-        if (!res.ok) throw new Error("transform unavailable");
+        const res = await fetch(src);
+        if (!res.ok) throw new Error("source unavailable");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         trigger(url, filename);
@@ -180,7 +186,11 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
           </div>
           <GlassButton variant="iris" size="lg" className="w-full" onClick={download} disabled={busy}>
             {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-            {chosen?.mine ? `Download for your screen · ${chosen.w}×${chosen.h}` : `Download · ${chosen?.w}×${chosen?.h}`}
+            {chosen?.original
+              ? `Download original · ${w.width}×${w.height}`
+              : chosen?.mine
+                ? `Download for your screen · ${chosen.w}×${chosen.h}`
+                : `Download · ${chosen?.w}×${chosen?.h}`}
           </GlassButton>
           <p className="text-center text-[11px] text-chalk-faint">
             Auto-fitted to the exact pixels you pick — no manual cropping.
