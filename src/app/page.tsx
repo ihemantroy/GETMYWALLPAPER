@@ -54,44 +54,42 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       <Suspense fallback={null}><DeviceWelcome /></Suspense>
       {showIntro && (
         <>
-          <section className="mb-12 max-w-3xl">
-            <div className="surface inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-xs font-medium text-chalk-muted">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-2 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-2" />
+          <section className="mb-16 max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium tracking-wide text-chalk-muted backdrop-blur">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
               </span>
-              Fresh drops every day
+              New wallpapers, every day
             </div>
-            <h1 className="mt-5 font-display text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">
-              Wallpapers that<br />fit your <span className="text-gradient">screen.</span>
+            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-[5.25rem] sm:leading-[0.98]">
+              Wallpapers that<br />
+              <span className="text-gradient-soft">fit your screen.</span>
             </h1>
-            <p className="mt-5 max-w-md text-lg text-chalk-muted">
-              Fresh drops daily, sized exactly for your desktop, tablet, or phone. Free, always.
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-chalk-muted">
+              A calm, premium space for wallpapers that actually fit — sized to your exact screen,
+              free forever, and refreshed every day.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-chalk-muted">
-              <span><b className="text-chalk">{total}+</b> wallpapers</span>
-              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
-              <span><b className="text-chalk">{categories.length}</b> categories</span>
-              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
-              <span><b className="text-chalk">4K</b> quality</span>
-              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
-              <span><b className="text-chalk">100%</b> free</span>
-            </div>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <Countdown />
-              <a href="/api/random" className="surface focusable inline-flex items-center gap-2 rounded-pill px-5 py-2.5 text-sm font-semibold text-chalk transition hover:bg-white/10">
+              <a
+                href="/api/random"
+                className="focusable inline-flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-chalk transition hover:border-white/25 hover:bg-white/[0.04]"
+              >
                 <Shuffle size={15} /> Surprise me
               </a>
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-xs uppercase tracking-widest text-chalk-faint">Trending</span>
+            <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/[0.06] pt-6">
               {[
-                { s: "dark", l: "Dark" }, { s: "minimal", l: "Minimal" }, { s: "4k", l: "4K" },
-                { s: "amoled", l: "AMOLED" }, { s: "aesthetic", l: "Aesthetic" }, { s: "nature", l: "Nature" },
-              ].map((t) => (
-                <Link key={t.s} href={`/wallpapers/${t.s}`} className="focusable surface rounded-pill px-3.5 py-1.5 text-xs font-medium text-chalk-muted transition hover:text-chalk">
-                  {t.l}
-                </Link>
+                { n: `${total}+`, l: "Wallpapers" },
+                { n: categories.length, l: "Categories" },
+                { n: "4K", l: "Quality" },
+                { n: "Free", l: "Always" },
+              ].map((s) => (
+                <div key={s.l}>
+                  <p className="font-display text-2xl font-semibold tracking-tight text-chalk">{s.n}</p>
+                  <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">{s.l}</p>
+                </div>
               ))}
             </div>
           </section>
@@ -197,9 +195,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
             )}
           </div>
         </section>
-
-        {showIntro && <HomeSections categories={categories} />}
       </div>
+
+      {showIntro && <HomeSections categories={categories} />}
     </main>
   );
 }

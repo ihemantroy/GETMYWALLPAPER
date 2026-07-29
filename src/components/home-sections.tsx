@@ -7,17 +7,17 @@ const WHY = [
   { icon: Monitor, title: "Fits your exact screen", body: "Auto-sized to your phone, tablet, or desktop pixels, so it looks crisp with no manual cropping." },
   { icon: Sparkles, title: "Fresh drops daily", body: "New, hand-picked and AI-crafted wallpapers land every day across every category." },
   { icon: Zap, title: "Fast & installable", body: "A lightweight, app-like experience you can add to your home screen and open in one tap." },
-  { icon: Layers, title: "Every vibe & category", body: "Minimal, abstract, nature, AMOLED, aesthetic and more — organised so you find your look fast." },
-  { icon: ShieldCheck, title: "Licensed sources", body: "We build from original and license-clean art, so what you download is safe to use." },
+  { icon: Layers, title: "Every vibe & category", body: "Minimal, abstract, nature, AMOLED and more — organised so you find your look fast." },
+  { icon: ShieldCheck, title: "Licensed sources", body: "Built from original and license-clean art, so what you download is safe to use." },
 ];
 
 const COLLECTIONS = [
-  { slug: "dark", label: "Dark Wallpapers" },
-  { slug: "minimal", label: "Minimal Wallpapers" },
-  { slug: "4k", label: "4K Wallpapers" },
-  { slug: "amoled", label: "AMOLED Wallpapers" },
-  { slug: "aesthetic", label: "Aesthetic Wallpapers" },
-  { slug: "nature", label: "Nature Wallpapers" },
+  { slug: "dark", label: "Dark" },
+  { slug: "minimal", label: "Minimal" },
+  { slug: "4k", label: "4K" },
+  { slug: "amoled", label: "AMOLED" },
+  { slug: "aesthetic", label: "Aesthetic" },
+  { slug: "nature", label: "Nature" },
 ];
 
 const FAQS = [
@@ -29,6 +29,16 @@ const FAQS = [
   { q: "Who do I contact about a wallpaper or a copyright concern?", a: "Email ihemantroy@gmail.com for credits, takedown or dispute requests and we will respond promptly." },
 ];
 
+function SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent/80">{eyebrow}</p>
+      <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h2>
+      {sub && <p className="mt-3 text-chalk-muted">{sub}</p>}
+    </div>
+  );
+}
+
 export function HomeSections({ categories }: { categories: Category[] }) {
   const popular = [...categories]
     .filter((c) => (c.count ?? 0) > 0)
@@ -38,32 +48,26 @@ export function HomeSections({ categories }: { categories: Category[] }) {
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQS.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
+    mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
 
   return (
-    <div className="mt-20 space-y-20">
+    <div className="mt-28 space-y-28">
       {/* Why choose */}
       <section>
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent-2">Why GetYourWallpaper</p>
-        <h2 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Wallpapers <span className="text-accent">with taste.</span>
-        </h2>
-        <p className="mt-3 max-w-2xl text-chalk-muted">
-          A premium, free wallpaper platform built for people who care how their screen looks. Here is what makes it different.
-        </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SectionHead
+          eyebrow="Why GetYourWallpaper"
+          title="Wallpapers with taste."
+          sub="A premium, free platform built for people who care how their screen looks."
+        />
+        <div className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
           {WHY.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="surface rounded-card p-6">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 shadow-glow">
-                <Icon size={20} className="text-white" />
+            <div key={title} className="bg-white/[0.015] p-7 transition hover:bg-white/[0.035]">
+              <div className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-accent">
+                <Icon size={18} />
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-              <p className="mt-1.5 text-sm text-chalk-muted">{body}</p>
+              <h3 className="mt-5 font-display text-base font-semibold">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-chalk-muted">{body}</p>
             </div>
           ))}
         </div>
@@ -72,14 +76,13 @@ export function HomeSections({ categories }: { categories: Category[] }) {
       {/* Popular categories */}
       {popular.length > 0 && (
         <section>
-          <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Popular categories</h2>
-          <p className="mt-2 text-chalk-muted">Jump straight to the look you want.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <SectionHead eyebrow="Browse" title="Popular categories" />
+          <div className="mt-10 flex flex-wrap justify-center gap-2.5">
             {popular.map((c) => (
               <Link
                 key={c.id}
                 href={`/?category=${c.slug}`}
-                className="focusable surface rounded-pill px-5 py-3 text-sm font-medium text-chalk-muted transition hover:text-chalk"
+                className="focusable card-min rounded-full px-5 py-2.5 text-sm font-medium text-chalk-muted transition hover:text-chalk"
               >
                 {c.name} <span className="ml-1 text-chalk-faint">{c.count}</span>
               </Link>
@@ -88,19 +91,18 @@ export function HomeSections({ categories }: { categories: Category[] }) {
         </section>
       )}
 
-      {/* Popular collections (real SEO landing pages) */}
+      {/* Popular collections */}
       <section>
-        <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Popular collections</h2>
-        <p className="mt-2 text-chalk-muted">Curated sets people love — free, in HD and 4K.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SectionHead eyebrow="Curated" title="Popular collections" sub="Hand-curated sets — free, in HD and 4K." />
+        <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLLECTIONS.map((c) => (
             <Link
               key={c.slug}
               href={`/wallpapers/${c.slug}`}
-              className="focusable surface group flex items-center justify-between rounded-card p-5 transition hover:ring-1 hover:ring-white/20"
+              className="focusable card-min group flex items-center justify-between rounded-2xl px-6 py-5"
             >
-              <span className="font-display text-lg font-semibold">{c.label}</span>
-              <span className="text-accent transition group-hover:translate-x-1">→</span>
+              <span className="font-display text-lg font-medium">{c.label}</span>
+              <span className="text-chalk-faint transition group-hover:translate-x-1 group-hover:text-accent">→</span>
             </Link>
           ))}
         </div>
@@ -108,15 +110,15 @@ export function HomeSections({ categories }: { categories: Category[] }) {
 
       {/* FAQ */}
       <section>
-        <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Frequently asked questions</h2>
-        <div className="mt-6 space-y-3">
+        <SectionHead eyebrow="Help" title="Frequently asked questions" />
+        <div className="mx-auto mt-10 max-w-2xl space-y-3">
           {FAQS.map((f) => (
-            <details key={f.q} className="surface group rounded-card p-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+            <details key={f.q} className="card-min group rounded-2xl px-6 py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
                 {f.q}
-                <span className="text-chalk-faint transition group-open:rotate-45">+</span>
+                <span className="ml-4 shrink-0 text-lg leading-none text-chalk-faint transition group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-sm text-chalk-muted">{f.a}</p>
+              <p className="mt-3 text-sm leading-relaxed text-chalk-muted">{f.a}</p>
             </details>
           ))}
         </div>

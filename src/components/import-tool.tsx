@@ -5,7 +5,7 @@ import { Search, Download, Check, Loader2, Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types";
 
-type Source = "pexels" | "unsplash";
+type Source = "pexels" | "unsplash" | "pixabay" | "nasa";
 type Photo = {
   id: number | string; width: number; height: number;
   photographer: string; photographer_url: string;
@@ -97,6 +97,8 @@ export function ImportTool() {
       <div className="mb-5 flex gap-2">
         <Tab s="pexels" label="Pexels" />
         <Tab s="unsplash" label="Unsplash" />
+        <Tab s="pixabay" label="Pixabay" />
+        <Tab s="nasa" label="NASA" />
       </div>
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">

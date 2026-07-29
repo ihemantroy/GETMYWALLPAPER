@@ -172,3 +172,24 @@ button:active, [role="button"]:active, a.btn-accent:active {
 }
 @keyframes text-gradient-move { to { background-position: 220% center; } }
 @media (prefers-reduced-motion: reduce) { .text-gradient { animation: none; } }
+
+/* ---- Minimal / premium refinements ---- */
+.text-gradient-soft {
+  background: linear-gradient(100deg, #b7a6ff, #7C5CFF 45%, #C74BFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hairline { border-color: rgba(255, 255, 255, 0.07); }
+/* refined minimal card — hairline border, whisper-soft fill */
+.card-min {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  transition: border-color .3s ease, background-color .3s ease, transform .3s ease;
+}
+.card-min:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
