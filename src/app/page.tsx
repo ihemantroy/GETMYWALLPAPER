@@ -74,15 +74,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
             <section className="mb-12">
               <Link
                 href={`/wallpaper/${wotd.slug}`}
-                className="group relative block overflow-hidden rounded-xl2 ring-1 ring-white/10"
+                className={`group relative block overflow-hidden rounded-xl2 ring-1 ring-white/10 ${
+                  params.device === "phone" || params.device === "tablet" ? "mx-auto w-full max-w-sm" : ""
+                }`}
               >
                 <div
                   className={
-                    params.device === "phone"
-                      ? "relative aspect-[4/5] w-full sm:aspect-[3/4]"
-                      : params.device === "tablet"
-                        ? "relative aspect-[3/4] w-full"
-                        : "relative aspect-[16/8] w-full sm:aspect-[16/6]"
+                    params.device === "phone" || params.device === "tablet"
+                      ? "relative aspect-[3/4] w-full"
+                      : "relative aspect-[16/8] w-full sm:aspect-[16/6]"
                   }
                 >
                   <img
