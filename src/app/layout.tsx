@@ -10,7 +10,7 @@ import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Footer } from "@/components/footer";
 import { SITE } from "@/lib/constants";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com";
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
