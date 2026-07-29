@@ -103,32 +103,39 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      {/* preview stage — always the true wallpaper at its real shape */}
+      {/* preview stage — wallpaper fitted to the chosen device (center-cropped like a real screen) */}
       <div className="surface relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-card p-5 sm:p-8">
-        {!loaded && (
-          <div className="liquid-skeleton absolute inset-6 rounded-2xl" />
-        )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={preview}
-          alt={w.title}
-          onLoad={(e) => {
-            setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight });
-            setLoaded(true);
-          }}
-          onError={() => setLoaded(true)}
+        <div
           style={{ backgroundColor: w.dominant_color ?? "#0b0b12" }}
           className={cn(
-            "max-h-[64vh] w-auto max-w-full rounded-2xl object-contain shadow-lift ring-1 ring-white/10 transition-opacity duration-500",
-            loaded ? "opacity-100" : "opacity-0",
+            "relative overflow-hidden shadow-lift ring-1 ring-white/10 transition-all duration-500",
+            frame === "phone" && "aspect-[9/19.5] w-[210px] max-w-full rounded-[2rem]",
+            frame === "desktop" && "aspect-[16/9] w-full max-w-lg rounded-xl",
+            frame === "tablet" && "aspect-[3/4] w-[290px] max-w-full rounded-2xl",
           )}
-        />
+        >
+          {!loaded && <div className="liquid-skeleton absolute inset-0" />}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview}
+            alt={w.title}
+            onLoad={(e) => {
+              setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight });
+              setLoaded(true);
+            }}
+            onError={() => setLoaded(true)}
+            className={cn(
+              "h-full w-full object-cover object-center transition-opacity duration-500",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
+          />
+        </div>
       </div>
 
       {/* controls */}
       <div className="flex flex-col gap-5">
         <div>
-          <p className="mb-2 text-xs uppercase tracking-widest text-chalk-faint">Download for</p>
+          <p className="mb-2 text-xs uppercase tracking-widest text-chalk-faint">Preview on</p>
           <div className="surface flex gap-1 rounded-pill p-1">
             {FRAMES.map(({ key, icon: Icon, label }) => (
               <button
