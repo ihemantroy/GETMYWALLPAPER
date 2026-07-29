@@ -30,7 +30,7 @@ export function FavoritesView({ categories }: { categories: Category[] }) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] animate-pulse rounded-card bg-white/5" />
+          <div key={i} className="liquid-skeleton aspect-[3/4] rounded-card" />
         ))}
       </div>
     );

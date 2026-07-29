@@ -62,6 +62,38 @@ body::after {
       inset 0 0 0 1px rgba(255,255,255,0.05),
       inset 0 -34px 44px -34px rgba(0,0,0,0.55);
   }
+  /* liquid shine sweep — a single specular band glides across on reveal */
+  .liquid-sheen {
+    border-radius: inherit;
+    opacity: 0;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.30) 50%, transparent 58%);
+    background-size: 260% 100%;
+    background-position: 150% 0;
+  }
+  .liquid-sheen--run { animation: liquid-sweep 1.15s cubic-bezier(0.22,1,0.36,1) 0.1s both; }
+  @keyframes liquid-sweep {
+    0%   { opacity: 0; background-position: 150% 0; }
+    35%  { opacity: 1; }
+    100% { opacity: 0; background-position: -60% 0; }
+  }
+  /* premium loading shimmer */
+  .liquid-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+  }
+  .liquid-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+    background-size: 260% 100%;
+    animation: liquid-shimmer 1.6s linear infinite;
+  }
+  @keyframes liquid-shimmer {
+    from { background-position: 150% 0; }
+    to   { background-position: -60% 0; }
+  }
   .glass-strong {
     background: rgba(20, 20, 26, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.12);

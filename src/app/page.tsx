@@ -106,7 +106,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               <h2 className="mb-4 mt-1 font-display text-2xl font-bold">Featured</h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {featured.slice(0, 4).map((w, i) => (
-                  <WallpaperCard key={w.id} w={w} priority={i < 2} />
+                  <WallpaperCard key={w.id} w={w} device={params.device} priority={i < 2} />
                 ))}
               </div>
             </section>
@@ -144,6 +144,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                 <WallpaperGrid
                   wallpapers={wallpapers}
                   categories={categories}
+                  device={params.device}
                   empty={{
                     title: filtering ? "No matches" : page > 1 ? "Nothing on this page" : "The wall is empty — for now",
                     body: filtering

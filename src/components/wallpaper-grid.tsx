@@ -6,10 +6,12 @@ export function WallpaperGrid({
   wallpapers,
   categories = [],
   empty,
+  device,
 }: {
   wallpapers: Wallpaper[];
   categories?: Category[];
   empty?: { title?: string; body?: string; cta?: { href: string; label: string } };
+  device?: string;
 }) {
   if (wallpapers.length === 0) {
     return <EmptyState {...empty} />;
@@ -22,6 +24,7 @@ export function WallpaperGrid({
         <WallpaperCard
           key={w.id}
           w={w}
+          device={device}
           categoryName={w.category_id ? nameById.get(w.category_id) : undefined}
           priority={i < 4}
         />

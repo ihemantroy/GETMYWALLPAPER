@@ -13,9 +13,18 @@ function isNew(w: Wallpaper) {
   return d ? Date.now() - new Date(d).getTime() < 7 * 864e5 : false;
 }
 
+// portrait for phone/tablet, landscape for laptop/desktop — uniform tiles per view.
+// Literal class strings so Tailwind's JIT picks them up.
+const ASPECT_BY_DEVICE: Record<string, string> = {
+  phone: "aspect-[9/16]",
+  tablet: "aspect-[3/4]",
+  desktop: "aspect-[16/10]",
+};
+
 export function WallpaperCard({
-  w, categoryName, priority = false,
-}: { w: Wallpaper; categoryName?: string; priority?: boolean }) {
+  w, categoryName, priority = false, device,
+}: { w: Wallpaper; categoryName?: string; priority?: boolean; device?: string }) {
+  const aspect = (device && ASPECT_BY_DEVICE[device]) || "aspect-[3/4]";
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   // Cached / server-rendered images can finish loading before React attaches
@@ -55,7 +64,7 @@ export function WallpaperCard({
       <motion.div onMouseMove={onMove} onMouseLeave={reset} style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}>
         <Link
           href={`/wallpaper/${w.slug}`}
-          className="focusable relative block aspect-[3/4] overflow-hidden rounded-card ring-1 ring-white/10 transition-shadow duration-300 hover:shadow-lift"
+          className={`focusable relative block ${aspect} overflow-hidden rounded-card ring-1 ring-white/10 transition-shadow duration-300 hover:shadow-lift`}
         >
           {/* uniform tiles — thumbnail is framed to a tidy portrait (center-crop);
               the full-resolution wallpaper still downloads uncropped */}
@@ -76,6 +85,9 @@ export function WallpaperCard({
 
           {/* liquid-glass rim light */}
           <div className="liquid-rim pointer-events-none absolute inset-0" style={{ transform: "translateZ(6px)" }} />
+
+          {/* liquid shine — a light band glides across once the tile appears */}
+          <div className={`liquid-sheen pointer-events-none absolute inset-0 ${loaded ? "liquid-sheen--run" : ""}`} style={{ transform: "translateZ(8px)" }} />
 
           {/* cursor-tracked specular droplet — the premium liquid glass touch */}
           <motion.div
