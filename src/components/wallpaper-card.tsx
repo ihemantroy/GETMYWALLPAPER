@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from "framer-motion";
 import { Flame, Sparkles } from "lucide-react";
 import type { Wallpaper } from "@/lib/types";
 import { renderUrl } from "@/lib/supabase/storage";
@@ -15,10 +16,16 @@ function isNew(w: Wallpaper) {
 export function WallpaperCard({
   w, categoryName, priority = false,
 }: { w: Wallpaper; categoryName?: string; priority?: boolean }) {
+  const [loaded, setLoaded] = useState(false);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
-  const rx = useSpring(useTransform(my, [-0.5, 0.5], ["5deg", "-5deg"]), { stiffness: 200, damping: 18 });
-  const ry = useSpring(useTransform(mx, [-0.5, 0.5], ["-5deg", "5deg"]), { stiffness: 200, damping: 18 });
+  const rx = useSpring(useTransform(my, [-0.5, 0.5], ["4deg", "-4deg"]), { stiffness: 200, damping: 18 });
+  const ry = useSpring(useTransform(mx, [-0.5, 0.5], ["-4deg", "4deg"]), { stiffness: 200, damping: 18 });
+
+  // liquid-drop specular highlight that tracks the cursor across the glass
+  const gx = useTransform(mx, (v) => `${(v + 0.5) * 100}%`);
+  const gy = useTransform(my, (v) => `${(v + 0.5) * 100}%`);
+  const glare = useMotionTemplate`radial-gradient(190px circle at ${gx} ${gy}, rgba(255,255,255,0.35), rgba(255,255,255,0.06) 45%, transparent 68%)`;
 
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
     const r = e.currentTarget.getBoundingClientRect();
@@ -52,8 +59,19 @@ export function WallpaperCard({
             })}
             alt={w.title}
             loading={priority ? "eager" : "lazy"}
-            className="block h-auto w-full transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
+            onLoad={() => setLoaded(true)}
+            className={`block h-auto w-full transition-[transform,filter,opacity] duration-700 ease-out group-hover:scale-[1.03] ${loaded ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
             style={{ backgroundColor: w.dominant_color ?? "#12121b" }}
+          />
+
+          {/* liquid-glass rim light */}
+          <div className="liquid-rim pointer-events-none absolute inset-0" style={{ transform: "translateZ(6px)" }} />
+
+          {/* cursor-tracked specular droplet — the premium liquid glass touch */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-100"
+            style={{ background: glare, transform: "translateZ(12px)" }}
           />
 
           <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5" style={{ transform: "translateZ(30px)" }}>
@@ -69,9 +87,9 @@ export function WallpaperCard({
             )}
           </div>
 
-          <div className="glass-cap pointer-events-none absolute inset-x-0 bottom-0 translate-y-1 p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100" style={{ transform: "translateZ(20px)" }}>
-            <p className="truncate text-[15px] font-semibold text-white">{w.title}</p>
-            {categoryName && <p className="mt-0.5 text-xs text-white/70">{categoryName}</p>}
+          <div className="glass-cap pointer-events-none absolute inset-x-0 bottom-0 translate-y-1 p-3.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100" style={{ transform: "translateZ(20px)" }}>
+            <p className="truncate text-[13px] font-semibold text-white sm:text-[15px]">{w.title}</p>
+            {categoryName && <p className="mt-0.5 text-[11px] text-white/70 sm:text-xs">{categoryName}</p>}
           </div>
         </Link>
 

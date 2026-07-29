@@ -28,9 +28,9 @@ export function FavoritesView({ categories }: { categories: Category[] }) {
 
   if (items === null) {
     return (
-      <div className="masonry columns-[240px]">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="mb-4 h-64 animate-pulse rounded-card bg-white/5" />
+      <div className="masonry columns-2 sm:columns-3 lg:columns-4 xl:columns-5">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-56 animate-pulse rounded-card bg-white/5" />
         ))}
       </div>
     );
