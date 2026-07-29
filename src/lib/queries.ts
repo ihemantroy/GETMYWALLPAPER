@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Wallpaper, Category } from "@/lib/types";
+import { colorBucket } from "@/lib/utils";
 
 type BrowseParams = {
   device?: string;
   category?: string;   // category slug
   q?: string;
+  color?: string;      // colour family slug (see COLOR_BUCKETS)
   sort?: "latest" | "popular";
   limit?: number;
   offset?: number;
@@ -94,7 +96,7 @@ export async function getWallpapersPage(
   params: BrowseParams & { page?: number } = {},
 ): Promise<{ items: Wallpaper[]; total: number }> {
   const supabase = await createClient();
-  const { device, category, q, sort = "latest", page = 1, limit = PER_PAGE } = params;
+  const { device, category, q, color, sort = "latest", page = 1, limit = PER_PAGE } = params;
 
   let query = supabase.from("wallpapers").select("*", { count: "exact" }).eq("status", "published");
   if (device) query = query.contains("devices", [device]);
@@ -106,6 +108,19 @@ export async function getWallpapersPage(
   }
   if (sort === "popular") query = query.order("download_count", { ascending: false });
   else query = query.order("published_at", { ascending: false });
+
+  // Colour search: Supabase can't range-match a hex, so pull a bounded set and
+  // bucket the dominant colour in JS, then paginate the filtered list.
+  if (color) {
+    const { data, error } = await query.range(0, 799);
+    if (error) {
+      console.error("getWallpapersPage(color)", error.message);
+      return { items: [], total: 0 };
+    }
+    const filtered = (data ?? []).filter((w) => colorBucket(w.dominant_color) === color);
+    const from = (Math.max(1, page) - 1) * limit;
+    return { items: filtered.slice(from, from + limit), total: filtered.length };
+  }
 
   const from = (Math.max(1, page) - 1) * limit;
   const { data, count, error } = await query.range(from, from + limit - 1);

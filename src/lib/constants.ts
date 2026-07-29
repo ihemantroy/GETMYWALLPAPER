@@ -52,6 +52,27 @@ export const VIBES = [
   { slug: "anime", label: "Anime" },
 ] as const;
 
+// Colour families for colour search + /wallpapers/<colour> landing pages.
+export const COLOR_BUCKETS = [
+  { slug: "red", label: "Red", swatch: "#e2404f" },
+  { slug: "orange", label: "Orange", swatch: "#f0862f" },
+  { slug: "yellow", label: "Yellow", swatch: "#f2c73a" },
+  { slug: "green", label: "Green", swatch: "#46b46a" },
+  { slug: "teal", label: "Teal", swatch: "#2fc7c7" },
+  { slug: "blue", label: "Blue", swatch: "#3d7cff" },
+  { slug: "purple", label: "Purple", swatch: "#8a5cff" },
+  { slug: "pink", label: "Pink", swatch: "#e85cc0" },
+  { slug: "mono", label: "Black & White", swatch: "#9aa0aa" },
+] as const;
+
+// Extra keyword topics that get their own SEO landing page + sitemap entry.
+export const KEYWORD_TOPICS = [
+  { slug: "4k", label: "4K" },
+  { slug: "hd", label: "HD" },
+  { slug: "amoled", label: "AMOLED" },
+  { slug: "gradient", label: "Gradient" },
+] as const;
+
 // public VAPID key for web-push (safe to ship to the browser)
 export const VAPID_PUBLIC_KEY =
   "BPT0vn_-UEZqJZ4FCuid03fL-30avQQVBDviZGNHSBnwpkgT-JTzERtommpv7zbj6T59Kl9F81Y6VjId8o67MVg";

@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-function hrefFor(params: Record<string, string | undefined>, page: number) {
+function hrefFor(params: Record<string, string | undefined>, page: number, basePath = "/") {
   const p = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && k !== "page" && p.set(k, v));
   if (page > 1) p.set("page", String(page));
   const s = p.toString();
-  return s ? `/?${s}` : "/";
+  return s ? `${basePath}?${s}` : basePath;
 }
 
 /** Build a compact page list with ellipses: 1 … 4 5 [6] 7 8 … 20 */
@@ -24,14 +24,14 @@ function pageList(current: number, total: number): (number | "…")[] {
 }
 
 export function Pagination({
-  page, total, perPage, params,
-}: { page: number; total: number; perPage: number; params: Record<string, string | undefined> }) {
+  page, total, perPage, params, basePath = "/",
+}: { page: number; total: number; perPage: number; params: Record<string, string | undefined>; basePath?: string }) {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   if (totalPages <= 1) return null;
 
   return (
     <nav className="mt-12 flex items-center justify-center gap-1.5" aria-label="Pagination">
-      <PageLink href={hrefFor(params, page - 1)} disabled={page <= 1} aria-label="Previous">
+      <PageLink href={hrefFor(params, page - 1, basePath)} disabled={page <= 1} aria-label="Previous">
         <ChevronLeft size={16} />
       </PageLink>
 
@@ -41,7 +41,7 @@ export function Pagination({
         ) : (
           <Link
             key={p}
-            href={hrefFor(params, p)}
+            href={hrefFor(params, p, basePath)}
             aria-current={p === page ? "page" : undefined}
             className={cn(
               "focusable grid h-10 min-w-10 place-items-center rounded-pill px-3 text-sm font-medium transition",
@@ -53,7 +53,7 @@ export function Pagination({
         ),
       )}
 
-      <PageLink href={hrefFor(params, page + 1)} disabled={page >= totalPages} aria-label="Next">
+      <PageLink href={hrefFor(params, page + 1, basePath)} disabled={page >= totalPages} aria-label="Next">
         <ChevronRight size={16} />
       </PageLink>
     </nav>

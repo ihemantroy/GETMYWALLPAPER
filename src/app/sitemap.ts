@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/server";
-import { DEVICES } from "@/lib/constants";
+import { DEVICES, COLOR_BUCKETS, VIBES, KEYWORD_TOPICS } from "@/lib/constants";
 
 const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com";
 
@@ -17,6 +17,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // SEO landing pages: /wallpapers/<topic>
+  const topicSlugs = [
+    ...DEVICES.map((d) => d.slug),
+    ...COLOR_BUCKETS.map((c) => c.slug),
+    ...VIBES.map((v) => v.slug),
+    ...KEYWORD_TOPICS.map((k) => k.slug),
+  ];
+  const topicRoutes = topicSlugs.map((slug) => ({
+    url: `${base}/wallpapers/${slug}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   let catRoutes: MetadataRoute.Sitemap = [];
   let walls: MetadataRoute.Sitemap = [];
   try {
@@ -27,6 +40,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.6,
     }));
+    // category landing pages too
+    catRoutes = catRoutes.concat(
+      (cats ?? []).map((c: { slug: string }) => ({
+        url: `${base}/wallpapers/${c.slug}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+    );
 
     const { data } = await admin
       .from("wallpapers")
@@ -43,5 +64,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  return [...staticRoutes, ...deviceRoutes, ...catRoutes, ...walls];
+  return [...staticRoutes, ...deviceRoutes, ...topicRoutes, ...catRoutes, ...walls];
 }
