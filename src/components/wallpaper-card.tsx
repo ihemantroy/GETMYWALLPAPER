@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from "framer-motion";
 import { Flame, Sparkles } from "lucide-react";
@@ -17,6 +17,13 @@ export function WallpaperCard({
   w, categoryName, priority = false,
 }: { w: Wallpaper; categoryName?: string; priority?: boolean }) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  // Cached / server-rendered images can finish loading before React attaches
+  // onLoad, so the event never fires — check completeness on mount so the
+  // image is never left permanently hidden.
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const rx = useSpring(useTransform(my, [-0.5, 0.5], ["4deg", "-4deg"]), { stiffness: 200, damping: 18 });
@@ -53,6 +60,7 @@ export function WallpaperCard({
           {/* natural sizing — the image defines its own shape, so it never crops */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            ref={imgRef}
             src={renderUrl(w.storage_path, {
               width: 640,
               height: Math.round(640 * (w.height / w.width)),
@@ -60,6 +68,7 @@ export function WallpaperCard({
             alt={w.title}
             loading={priority ? "eager" : "lazy"}
             onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(true)}
             className={`block h-auto w-full transition-[transform,filter,opacity] duration-700 ease-out group-hover:scale-[1.03] ${loaded ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
             style={{ backgroundColor: w.dominant_color ?? "#12121b" }}
           />
