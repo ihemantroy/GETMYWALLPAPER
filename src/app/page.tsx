@@ -6,7 +6,6 @@ import { renderUrl } from "@/lib/supabase/storage";
 import { CategoryRail } from "@/components/category-rail";
 import { CategoryPills } from "@/components/category-pills";
 import { SearchFilter } from "@/components/search-filter";
-import { ColorFilter } from "@/components/color-filter";
 import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { WallpaperCard } from "@/components/wallpaper-card";
 import { FavoritesView } from "@/components/favorites-view";
@@ -30,12 +29,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
     device: one(spRaw.device),
     sort: one(spRaw.sort) as "latest" | "popular" | undefined,
     q: one(spRaw.q),
-    color: one(spRaw.color),
     view: one(spRaw.view),
     page: page > 1 ? String(page) : undefined,
   };
   const isFav = params.view === "favorites";
-  const filtering = Boolean(params.category || params.q || params.color || isFav); // device alone still shows the full homepage
+  const filtering = Boolean(params.category || params.q || isFav); // device alone still shows the full homepage
   const showIntro = !filtering && page === 1; // hero + featured only on the clean first page
 
   const [categories, featured, wotd, pageData] = await Promise.all([
@@ -44,7 +42,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
     showIntro ? getWallpaperOfTheDay(params.device) : Promise.resolve(null),
     isFav ? Promise.resolve({ items: [], total: 0 }) : getWallpapersPage({
       category: params.category, device: params.device,
-      sort: params.sort ?? "latest", q: params.q, color: params.color, page,
+      sort: params.sort ?? "latest", q: params.q, page,
     }),
   ]);
   const { items: wallpapers, total } = pageData;
@@ -128,9 +126,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
           <SearchFilter />
           <div className="mt-4 lg:hidden">
             <CategoryPills categories={categories} active={params.category} params={params} />
-          </div>
-          <div className="mt-4">
-            <ColorFilter />
           </div>
 
           <div className="mt-8">

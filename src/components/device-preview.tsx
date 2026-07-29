@@ -29,7 +29,11 @@ function useClock() {
 }
 
 export function DevicePreview({ w }: { w: Wallpaper }) {
-  const [frame, setFrame] = useState<DeviceKind>("desktop");
+  // Default the preview to the wallpaper's OWN shape — a portrait phone
+  // wallpaper should open in the phone frame, not the viewer's desktop.
+  const initialFrame: DeviceKind =
+    w.orientation === "portrait" ? "phone" : w.orientation === "square" ? "tablet" : "desktop";
+  const [frame, setFrame] = useState<DeviceKind>(initialFrame);
   const [resIndex, setResIndex] = useState(0);
   const [detected, setDetected] = useState<DeviceKind | null>(null);
   const [myScreen, setMyScreen] = useState<Res | null>(null);
@@ -39,8 +43,7 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
   useEffect(() => {
     const d = detectDevice();
     setDetected(d);
-    setFrame(d === "ultrawide" ? "desktop" : d);
-    // exact device pixels — the "fit your screen" magic
+    // exact device pixels — the "fit your screen" magic (frame stays on the wallpaper's shape)
     const dpr = window.devicePixelRatio || 1;
     const w0 = Math.round(window.screen.width * dpr);
     const h0 = Math.round(window.screen.height * dpr);
