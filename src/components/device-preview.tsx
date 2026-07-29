@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Smartphone, Monitor, Tablet, Check, Sparkles, Loader2 } from "lucide-react";
 import type { Wallpaper } from "@/lib/types";
 import { publicUrl, renderUrl } from "@/lib/supabase/storage";
@@ -18,52 +17,53 @@ const FRAMES: { key: DeviceKind; icon: typeof Smartphone; label: string }[] = [
 
 type Res = { label: string; w: number; h: number; mine?: boolean; original?: boolean };
 
-function useClock() {
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const id = setInterval(() => setNow(new Date()), 1000 * 20);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
-
 export function DevicePreview({ w }: { w: Wallpaper }) {
-  // Default the preview to the wallpaper's OWN shape — a portrait phone
-  // wallpaper should open in the phone frame, not the viewer's desktop.
-  const initialFrame: DeviceKind =
-    w.orientation === "portrait" ? "phone" : w.orientation === "square" ? "tablet" : "desktop";
-  const [frame, setFrame] = useState<DeviceKind>(initialFrame);
+  const [frame, setFrame] = useState<DeviceKind>(
+    w.orientation === "portrait" ? "phone" : w.orientation === "square" ? "tablet" : "desktop",
+  );
   const [resIndex, setResIndex] = useState(0);
   const [detected, setDetected] = useState<DeviceKind | null>(null);
   const [myScreen, setMyScreen] = useState<Res | null>(null);
   const [busy, setBusy] = useState(false);
-  const clock = useClock();
+  // real pixel dimensions read from the actual image — never trust stored values
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const userPicked = useRef(false);
+
+  const realW = natural?.w ?? w.width;
+  const realH = natural?.h ?? w.height;
 
   useEffect(() => {
     const d = detectDevice();
     setDetected(d);
-    // exact device pixels — the "fit your screen" magic (frame stays on the wallpaper's shape)
     const dpr = window.devicePixelRatio || 1;
     const w0 = Math.round(window.screen.width * dpr);
     const h0 = Math.round(window.screen.height * dpr);
     if (w0 && h0) setMyScreen({ label: "Your screen", w: w0, h: h0, mine: true });
   }, []);
 
-  // build options: Original (full-res, uncompressed) first, then "Your screen", then presets
+  // once the true image shape is known, pick the matching download-size set
+  // (unless the user already chose one) — corrects any wrong stored dimensions
+  useEffect(() => {
+    if (!natural || userPicked.current) return;
+    const wide = natural.w >= natural.h;
+    const nearSquare = Math.abs(natural.w - natural.h) < natural.w * 0.12;
+    setFrame(nearSquare ? "tablet" : wide ? "desktop" : "phone");
+  }, [natural]);
+
   const options: Res[] = useMemo(() => {
     const base = RESOLUTIONS[frame] ?? RESOLUTIONS.desktop;
-    const list: Res[] = [{ label: "Original", w: w.width, h: w.height, original: true }];
+    const list: Res[] = [{ label: "Original", w: realW, h: realH, original: true }];
     if (myScreen) {
       const portrait = myScreen.h > myScreen.w;
       const frameIsPortrait = frame === "phone" || frame === "tablet";
       if (portrait === frameIsPortrait) list.push(myScreen);
     }
     return [...list, ...base];
-  }, [frame, myScreen, w.width, w.height]);
+  }, [frame, myScreen, realW, realH]);
 
   const chosen = options[Math.min(resIndex, options.length - 1)];
-  const preview = useMemo(() => renderUrl(w.storage_path, { width: 1000, quality: 90 }), [w.storage_path]);
+  const preview = useMemo(() => renderUrl(w.storage_path, { width: 1400, quality: 92 }), [w.storage_path]);
 
   async function download() {
     setBusy(true);
@@ -72,10 +72,8 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
       window.dispatchEvent(new Event("wallpaper-downloaded"));
 
       const filename = chosen.original
-        ? `${w.slug}-original-${w.width}x${w.height}.jpg`
+        ? `${w.slug}-original-${realW}x${realH}.jpg`
         : `${w.slug}-${chosen.w}x${chosen.h}.jpg`;
-      // Original = the untouched full-resolution file (no re-compression);
-      // otherwise fit to the exact chosen pixels at near-lossless quality.
       const src = chosen.original
         ? publicUrl(w.storage_path)
         : renderUrl(w.storage_path, { width: chosen.w, height: chosen.h, quality: 95 });
@@ -87,7 +85,7 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
         trigger(url, filename);
         setTimeout(() => URL.revokeObjectURL(url), 4000);
       } catch {
-        trigger(publicUrl(w.storage_path), filename); // fallback: full original
+        trigger(publicUrl(w.storage_path), filename);
       }
     } finally {
       setBusy(false);
@@ -105,45 +103,37 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      {/* preview stage */}
-      <div className="surface relative flex min-h-[380px] items-center justify-center overflow-hidden rounded-card p-8">
-        <div
+      {/* preview stage — always the true wallpaper at its real shape */}
+      <div className="surface relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-card p-5 sm:p-8">
+        {!loaded && (
+          <div className="liquid-skeleton absolute inset-6 rounded-2xl" />
+        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={preview}
+          alt={w.title}
+          onLoad={(e) => {
+            setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight });
+            setLoaded(true);
+          }}
+          onError={() => setLoaded(true)}
           style={{ backgroundColor: w.dominant_color ?? "#0b0b12" }}
           className={cn(
-            "relative overflow-hidden shadow-lift transition-all duration-500",
-            frame === "phone" && "aspect-[9/19.5] w-[190px] rounded-[2rem] ring-4 ring-black/40",
-            frame === "desktop" && "aspect-[16/9] w-full max-w-md rounded-xl ring-2 ring-black/40",
-            frame === "tablet" && "aspect-[3/4] w-[240px] rounded-2xl ring-4 ring-black/40",
+            "max-h-[64vh] w-auto max-w-full rounded-2xl object-contain shadow-lift ring-1 ring-white/10 transition-opacity duration-500",
+            loaded ? "opacity-100" : "opacity-0",
           )}
-        >
-          <Image src={preview} alt={`${w.title} on ${frame}`} fill className="object-contain" sizes="500px" />
-
-          {/* live lock-screen clock on the phone frame */}
-          {frame === "phone" && clock && (
-            <div className="absolute inset-x-0 top-10 flex flex-col items-center text-white drop-shadow-lg">
-              <p className="text-xs font-medium opacity-90">
-                {clock.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-              </p>
-              <p className="text-5xl font-semibold tabular-nums leading-tight">
-                {clock.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })}
-              </p>
-            </div>
-          )}
-          {frame === "phone" && (
-            <div className="absolute left-1/2 top-2 h-1.5 w-16 -translate-x-1/2 rounded-full bg-black/50" />
-          )}
-        </div>
+        />
       </div>
 
       {/* controls */}
       <div className="flex flex-col gap-5">
         <div>
-          <p className="mb-2 text-xs uppercase tracking-widest text-chalk-faint">Preview on</p>
+          <p className="mb-2 text-xs uppercase tracking-widest text-chalk-faint">Download for</p>
           <div className="surface flex gap-1 rounded-pill p-1">
             {FRAMES.map(({ key, icon: Icon, label }) => (
               <button
                 key={key}
-                onClick={() => { setFrame(key); setResIndex(0); }}
+                onClick={() => { userPicked.current = true; setFrame(key); setResIndex(0); }}
                 className={cn(
                   "focusable flex flex-1 items-center justify-center gap-1.5 rounded-pill py-2 text-xs font-medium transition",
                   frame === key ? "bg-white/15 text-chalk" : "text-chalk-muted hover:text-chalk",
@@ -182,13 +172,13 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
 
         <div className="mt-auto space-y-3">
           <div className="flex items-center justify-between text-xs text-chalk-muted">
-            <span>Original {w.width}×{w.height}</span>
+            <span>Original {realW}×{realH}</span>
             <span className="font-mono">{formatBytes(w.file_size)}</span>
           </div>
           <GlassButton variant="iris" size="lg" className="w-full" onClick={download} disabled={busy}>
             {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
             {chosen?.original
-              ? `Download original · ${w.width}×${w.height}`
+              ? `Download original · ${realW}×${realH}`
               : chosen?.mine
                 ? `Download for your screen · ${chosen.w}×${chosen.h}`
                 : `Download · ${chosen?.w}×${chosen?.h}`}
