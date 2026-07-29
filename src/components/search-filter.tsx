@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, useEffect } from "react";
-import { Search, Monitor, Tablet, Smartphone, Heart, ChevronDown } from "lucide-react";
+import { Search, Monitor, Tablet, Smartphone, Heart, ChevronDown, X } from "lucide-react";
 import { DEVICES, SORTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,12 @@ export function SearchFilter() {
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
-    push((p) => (q ? p.set("q", q) : p.delete("q")));
+    push((p) => (q.trim() ? p.set("q", q.trim()) : p.delete("q")));
+  }
+
+  function clearSearch() {
+    setQ("");
+    if (sp.get("q")) push((p) => p.delete("q"));
   }
 
   return (
@@ -44,11 +49,35 @@ export function SearchFilter() {
         <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-chalk-faint" />
         <input
           id="site-search"
+          type="search"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search wallpapers, vibes, colors…"
-          className="focusable surface h-12 w-full rounded-pill pl-11 pr-4 text-sm text-chalk placeholder:text-chalk-faint"
+          className="focusable surface h-12 w-full rounded-pill pl-11 pr-28 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
         />
+        <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {q && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="focusable grid h-8 w-8 place-items-center rounded-full text-chalk-faint transition hover:text-chalk"
+            >
+              <X size={16} />
+            </button>
+          )}
+          <button
+            type="submit"
+            aria-label="Search"
+            className="btn-accent focusable inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold"
+          >
+            <Search size={15} />
+            <span className="hidden sm:inline">Search</span>
+          </button>
+        </div>
       </form>
 
       {/* mobile: compact dropdowns */}

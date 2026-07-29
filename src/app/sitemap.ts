@@ -5,7 +5,7 @@ import { DEVICES, COLOR_BUCKETS, VIBES, KEYWORD_TOPICS } from "@/lib/constants";
 const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = ["", "/contribute", "/about", "/contact", "/privacy", "/terms"].map((path) => ({
+  const staticRoutes = ["", "/contribute", "/about", "/contact", "/privacy", "/terms", "/disclaimer", "/dmca"].map((path) => ({
     url: `${base}${path}`,
     changeFrequency: "daily" as const,
     priority: path === "" ? 1 : 0.6,

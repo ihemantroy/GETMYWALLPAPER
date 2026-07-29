@@ -12,6 +12,7 @@ import { FavoritesView } from "@/components/favorites-view";
 import { Countdown } from "@/components/countdown";
 import { Pagination } from "@/components/pagination";
 import { YourDaily } from "@/components/your-daily";
+import { HomeSections } from "@/components/home-sections";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
@@ -53,18 +54,45 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       <Suspense fallback={null}><DeviceWelcome /></Suspense>
       {showIntro && (
         <>
-          <section className="mb-10 max-w-3xl">
-            <h1 className="font-display text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">
-              Wallpapers that<br />fit your <span className="text-accent">screen.</span>
+          <section className="mb-12 max-w-3xl">
+            <div className="surface inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-xs font-medium text-chalk-muted">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-2 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-2" />
+              </span>
+              Fresh drops every day
+            </div>
+            <h1 className="mt-5 font-display text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">
+              Wallpapers that<br />fit your <span className="text-gradient">screen.</span>
             </h1>
             <p className="mt-5 max-w-md text-lg text-chalk-muted">
               Fresh drops daily, sized exactly for your desktop, tablet, or phone. Free, always.
             </p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-chalk-muted">
+              <span><b className="text-chalk">{total}+</b> wallpapers</span>
+              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
+              <span><b className="text-chalk">{categories.length}</b> categories</span>
+              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
+              <span><b className="text-chalk">4K</b> quality</span>
+              <span className="h-1 w-1 rounded-full bg-chalk-faint" />
+              <span><b className="text-chalk">100%</b> free</span>
+            </div>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Countdown />
               <a href="/api/random" className="surface focusable inline-flex items-center gap-2 rounded-pill px-5 py-2.5 text-sm font-semibold text-chalk transition hover:bg-white/10">
                 <Shuffle size={15} /> Surprise me
               </a>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-xs uppercase tracking-widest text-chalk-faint">Trending</span>
+              {[
+                { s: "dark", l: "Dark" }, { s: "minimal", l: "Minimal" }, { s: "4k", l: "4K" },
+                { s: "amoled", l: "AMOLED" }, { s: "aesthetic", l: "Aesthetic" }, { s: "nature", l: "Nature" },
+              ].map((t) => (
+                <Link key={t.s} href={`/wallpapers/${t.s}`} className="focusable surface rounded-pill px-3.5 py-1.5 text-xs font-medium text-chalk-muted transition hover:text-chalk">
+                  {t.l}
+                </Link>
+              ))}
             </div>
           </section>
 
@@ -169,6 +197,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
             )}
           </div>
         </section>
+
+        {showIntro && <HomeSections categories={categories} />}
       </div>
     </main>
   );

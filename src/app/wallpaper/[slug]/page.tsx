@@ -41,15 +41,32 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
   if (!w) notFound();
   const related = await getRelated(w);
 
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "ImageObject",
-    name: w.title,
-    description: w.description ?? undefined,
-    contentUrl: publicUrl(w.storage_path),
-    width: w.width,
-    height: w.height,
-    uploadDate: w.published_at ?? w.created_at,
+    "@graph": [
+      {
+        "@type": "ImageObject",
+        name: w.title,
+        description: w.description ?? undefined,
+        contentUrl: publicUrl(w.storage_path),
+        thumbnailUrl: renderUrl(w.storage_path, { width: 600 }),
+        width: w.width,
+        height: w.height,
+        uploadDate: w.published_at ?? w.created_at,
+        creditText: w.credit ?? undefined,
+        acquireLicensePage: `${base}/dmca`,
+        isFamilyFriendly: true,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: base },
+          { "@type": "ListItem", position: 2, name: String(w.device ?? "Wallpapers"), item: `${base}/?device=${w.device}` },
+          { "@type": "ListItem", position: 3, name: w.title, item: `${base}/wallpaper/${w.slug}` },
+        ],
+      },
+    ],
   };
 
   return (

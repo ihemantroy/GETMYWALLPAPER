@@ -160,3 +160,15 @@ button:active, [role="button"]:active, a.btn-accent:active {
   button, [role="button"], .btn-accent { transition: none; }
   button:active, [role="button"]:active, a.btn-accent:active { transform: none; filter: none; }
 }
+
+/* ---- Animated gradient headline (fresh/trendy) ---- */
+.text-gradient {
+  background: linear-gradient(100deg, #7C5CFF, #C74BFF, #FF3D6E, #7C5CFF);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-gradient-move 6s linear infinite;
+}
+@keyframes text-gradient-move { to { background-position: 220% center; } }
+@media (prefers-reduced-motion: reduce) { .text-gradient { animation: none; } }
