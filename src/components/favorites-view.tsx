@@ -28,9 +28,9 @@ export function FavoritesView({ categories }: { categories: Category[] }) {
 
   if (items === null) {
     return (
-      <div className="masonry columns-2 sm:columns-3 lg:columns-4 xl:columns-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-56 animate-pulse rounded-card bg-white/5" />
+          <div key={i} className="aspect-[3/4] animate-pulse rounded-card bg-white/5" />
         ))}
       </div>
     );

@@ -55,9 +55,10 @@ export function WallpaperCard({
       <motion.div onMouseMove={onMove} onMouseLeave={reset} style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}>
         <Link
           href={`/wallpaper/${w.slug}`}
-          className="focusable relative block overflow-hidden rounded-card ring-1 ring-white/10 transition-shadow duration-300 hover:shadow-lift"
+          className="focusable relative block aspect-[3/4] overflow-hidden rounded-card ring-1 ring-white/10 transition-shadow duration-300 hover:shadow-lift"
         >
-          {/* natural sizing — the image defines its own shape, so it never crops */}
+          {/* uniform tiles — thumbnail is framed to a tidy portrait (center-crop);
+              the full-resolution wallpaper still downloads uncropped */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={imgRef}
@@ -69,7 +70,7 @@ export function WallpaperCard({
             loading={priority ? "eager" : "lazy"}
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
-            className={`block h-auto w-full transition-[transform,filter,opacity] duration-700 ease-out group-hover:scale-[1.03] ${loaded ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
+            className={`absolute inset-0 h-full w-full object-cover transition-[transform,filter,opacity] duration-700 ease-out group-hover:scale-[1.05] ${loaded ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
             style={{ backgroundColor: w.dominant_color ?? "#12121b" }}
           />
 

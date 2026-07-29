@@ -17,7 +17,7 @@ export function WallpaperGrid({
   const nameById = new Map(categories.map((c) => [c.id, c.name]));
 
   return (
-    <div className="masonry columns-2 sm:columns-3 lg:columns-4 xl:columns-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       {wallpapers.map((w, i) => (
         <WallpaperCard
           key={w.id}
