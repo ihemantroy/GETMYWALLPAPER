@@ -108,6 +108,7 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
       {/* preview stage */}
       <div className="surface relative flex min-h-[380px] items-center justify-center overflow-hidden rounded-card p-8">
         <div
+          style={{ backgroundColor: w.dominant_color ?? "#0b0b12" }}
           className={cn(
             "relative overflow-hidden shadow-lift transition-all duration-500",
             frame === "phone" && "aspect-[9/19.5] w-[190px] rounded-[2rem] ring-4 ring-black/40",
@@ -115,7 +116,7 @@ export function DevicePreview({ w }: { w: Wallpaper }) {
             frame === "tablet" && "aspect-[3/4] w-[240px] rounded-2xl ring-4 ring-black/40",
           )}
         >
-          <Image src={preview} alt={`${w.title} on ${frame}`} fill className="object-cover" sizes="500px" />
+          <Image src={preview} alt={`${w.title} on ${frame}`} fill className="object-contain" sizes="500px" />
 
           {/* live lock-screen clock on the phone frame */}
           {frame === "phone" && clock && (

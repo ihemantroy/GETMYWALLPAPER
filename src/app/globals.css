@@ -141,3 +141,22 @@ body::after {
   * { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ---- Tactile feedback: every button feels alive on press ---- */
+/* Kills the mobile 300ms tap delay + grey tap flash → buttons respond instantly */
+button, a, [role="button"], summary, select, label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button, [role="button"], .btn-accent {
+  transition: transform 130ms cubic-bezier(0.2, 0, 0, 1), filter 130ms ease, box-shadow 130ms ease;
+}
+/* press-down + subtle light-up, like a physical key */
+button:active, [role="button"]:active, a.btn-accent:active {
+  transform: scale(0.95);
+  filter: brightness(1.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  button, [role="button"], .btn-accent { transition: none; }
+  button:active, [role="button"]:active, a.btn-accent:active { transform: none; filter: none; }
+}

@@ -24,6 +24,8 @@ export function SearchFilter() {
       const p = new URLSearchParams(sp.toString());
       mut(p);
       const s = p.toString();
+      // instant feedback: light up the top progress bar before the server responds
+      window.dispatchEvent(new Event("app:navstart"));
       router.push(s ? `/?${s}` : "/", { scroll: false });
     },
     [router, sp],

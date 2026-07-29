@@ -6,6 +6,7 @@ import { Nav } from "@/components/nav";
 import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ChromeGate } from "@/components/chrome-gate";
 import { PwaRegister } from "@/components/pwa-register";
+import { TopProgressBar } from "@/components/top-progress-bar";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Footer } from "@/components/footer";
 import { SITE } from "@/lib/constants";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style>{`:root{--font-display:'Clash Display',system-ui,sans-serif;--font-sans:'General Sans',system-ui,sans-serif}`}</style>
       </head>
       <body>
+        <TopProgressBar />
         <ChromeGate><NavWrapper /></ChromeGate>
         <div className="min-h-screen">{children}</div>
         <ChromeGate><Footer /></ChromeGate>
