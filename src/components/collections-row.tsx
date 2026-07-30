@@ -16,6 +16,9 @@ export function CollectionsRow({ covers, device }: { covers: Wallpaper[]; device
   if (!covers.length) return null;
   const landscape = device !== "phone" && device !== "tablet";
   const aspect = landscape ? "aspect-[16/10]" : "aspect-[4/5]";
+  const isLand = (w: Wallpaper) => w.width >= w.height;
+  const pool = covers.filter((w) => (landscape ? isLand(w) : !isLand(w)));
+  const deck = pool.length ? pool : covers;
   return (
     <section id="collections" className="scroll-mt-24">
       <div className="mb-5 flex items-center justify-between">
@@ -26,7 +29,7 @@ export function CollectionsRow({ covers, device }: { covers: Wallpaper[]; device
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {COLLECTIONS.map((c, i) => {
-          const cover = covers[i % covers.length];
+          const cover = deck[i % deck.length];
           return (
             <Link
               key={c.slug}

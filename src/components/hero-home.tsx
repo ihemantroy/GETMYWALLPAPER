@@ -41,11 +41,16 @@ export function HeroHome({
   device?: string;
 }) {
   const nameById = new Map(categories.map((c) => [c.id, c.name]));
-  const hero = wotd ?? featured[0] ?? null;
-  const thumbs = featured.slice(0, 3);
-  const trending = featured.slice(0, 6);
   const landscape = device !== "phone" && device !== "tablet";
   const cardAspect = landscape ? "aspect-[16/10]" : "aspect-[4/5]";
+  const isLand = (w: Wallpaper) => w.width >= w.height;
+  // hero card is wide → always prefer a landscape image so it never zoom-crops
+  const hero = featured.find(isLand) ?? wotd ?? featured[0] ?? null;
+  // on desktop show only landscape wallpapers; on phone only portrait — fall back if none
+  const pool = landscape ? featured.filter(isLand) : featured.filter((w) => !isLand(w));
+  const deck = pool.length ? pool : featured;
+  const thumbs = deck.slice(0, 3);
+  const trending = deck;
 
   const stats = [
     { icon: ImageIcon, node: <CountUp value={total} suffix="+" />, label: "Wallpapers" },

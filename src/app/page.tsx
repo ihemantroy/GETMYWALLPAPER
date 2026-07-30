@@ -48,6 +48,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   const { items: wallpapers, total } = pageData;
   const catName = params.category ? categories.find((c) => c.slug === params.category)?.name : undefined;
   const downloads = [...featured, ...wallpapers].reduce((s, w) => s + (w.download_count ?? 0), 0);
+  // rich pool (featured + latest) so trending/collections can pull real landscape images
+  const showcase = [...featured, ...wallpapers].filter((w, i, arr) => arr.findIndex((x) => x.id === w.id) === i);
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-8">
@@ -58,9 +60,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         /* ---------- CLEAN HOMEPAGE ---------- */
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
-          <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} downloads={downloads} device={params.device} />
+          <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} />
 
-          <CollectionsRow covers={featured} device={params.device} />
+          <CollectionsRow covers={showcase} device={params.device} />
 
           <TopContributors />
 
