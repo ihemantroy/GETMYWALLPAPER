@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
+import { notifyNewWallpaper } from "@/lib/push";
 
 async function assertAdmin() {
   if (!(await isAdmin())) throw new Error("Not authorized");
@@ -29,8 +30,9 @@ export async function createWallpaper(input: {
   await assertAdmin();
   const admin = createAdminClient();
   const scheduled = input.scheduled_for && new Date(input.scheduled_for) > new Date();
+  const slug = `${slugify(input.title)}-${Date.now().toString(36)}${Math.floor(Math.random() * 1e3)}`;
   const { error } = await admin.from("wallpapers").insert({
-    slug: `${slugify(input.title)}-${Date.now().toString(36)}${Math.floor(Math.random() * 1e3)}`,
+    slug,
     title: input.title,
     description: input.description ?? null,
     storage_path: input.storage_path,
@@ -50,6 +52,7 @@ export async function createWallpaper(input: {
     published_at: scheduled ? null : new Date().toISOString(),
   });
   if (error) throw new Error(error.message);
+  if (!scheduled) await notifyNewWallpaper(input.title, slug);
   revalidatePath("/");
 }
 

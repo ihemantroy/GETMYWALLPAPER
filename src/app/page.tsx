@@ -8,7 +8,6 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { HeroHome } from "@/components/hero-home";
-import { CollectionsRow } from "@/components/collections-row";
 import { TopContributors } from "@/components/top-contributors";
 import { ShareVision } from "@/components/share-vision";
 import { DeviceSwitcher } from "@/components/device-switcher";
@@ -61,8 +60,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
           <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} />
-
-          <CollectionsRow covers={showcase} device={params.device} />
 
           <TopContributors />
 

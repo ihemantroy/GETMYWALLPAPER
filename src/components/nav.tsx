@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, Bell } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
+import { NotifyBell } from "@/components/notify-bell";
 
 const LINKS = [
   { label: "Home", href: "/" },
@@ -75,9 +76,7 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
             />
           </form>
 
-          <span className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-chalk-muted" aria-hidden>
-            <Bell size={17} />
-          </span>
+          <NotifyBell />
 
           {userInitial ? (
             <div className="grid h-10 w-10 place-items-center rounded-full btn-accent text-sm font-bold">{userInitial.toUpperCase()}</div>
