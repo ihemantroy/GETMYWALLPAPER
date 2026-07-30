@@ -15,7 +15,7 @@ const COLLECTIONS = [
 export function CollectionsRow({ covers }: { covers: Wallpaper[] }) {
   if (!covers.length) return null;
   return (
-    <section>
+    <section id="collections" className="scroll-mt-24">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent/80">Curated</p>
