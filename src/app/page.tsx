@@ -13,6 +13,7 @@ import { Countdown } from "@/components/countdown";
 import { Pagination } from "@/components/pagination";
 import { YourDaily } from "@/components/your-daily";
 import { HomeSections } from "@/components/home-sections";
+import { CountUp } from "@/components/count-up";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
@@ -51,6 +52,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-8">
+      <div className="aurora" aria-hidden />
       <Suspense fallback={null}><DeviceWelcome /></Suspense>
       {showIntro && (
         <>
@@ -80,17 +82,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               </a>
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/[0.06] pt-6">
-              {[
-                { n: `${total}+`, l: "Wallpapers" },
-                { n: categories.length, l: "Categories" },
-                { n: "4K", l: "Quality" },
-                { n: "Free", l: "Always" },
-              ].map((s) => (
-                <div key={s.l}>
-                  <p className="font-display text-2xl font-semibold tracking-tight text-chalk">{s.n}</p>
-                  <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">{s.l}</p>
-                </div>
-              ))}
+              <div>
+                <p className="font-display text-2xl font-semibold tracking-tight text-chalk"><CountUp value={total} suffix="+" /></p>
+                <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">Wallpapers</p>
+              </div>
+              <div>
+                <p className="font-display text-2xl font-semibold tracking-tight text-chalk"><CountUp value={categories.length} /></p>
+                <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">Categories</p>
+              </div>
+              <div>
+                <p className="font-display text-2xl font-semibold tracking-tight text-chalk">4K</p>
+                <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">Quality</p>
+              </div>
+              <div>
+                <p className="font-display text-2xl font-semibold tracking-tight text-chalk">Free</p>
+                <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">Always</p>
+              </div>
             </div>
           </section>
 

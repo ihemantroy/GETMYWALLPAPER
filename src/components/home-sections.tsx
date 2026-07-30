@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles, Monitor, Download, ShieldCheck, Zap, Layers } from "lucide-react";
 import type { Category } from "@/lib/types";
+import { Reveal } from "@/components/reveal";
 
 const WHY = [
   { icon: Download, title: "Free, full-resolution", body: "Every wallpaper downloads in its original quality — no paywall, no watermark, no sign-up." },
@@ -54,7 +55,7 @@ export function HomeSections({ categories }: { categories: Category[] }) {
   return (
     <div className="mt-28 space-y-28">
       {/* Why choose */}
-      <section>
+      <Reveal><section>
         <SectionHead
           eyebrow="Why GetYourWallpaper"
           title="Wallpapers with taste."
@@ -71,11 +72,11 @@ export function HomeSections({ categories }: { categories: Category[] }) {
             </div>
           ))}
         </div>
-      </section>
+      </section></Reveal>
 
       {/* Popular categories */}
       {popular.length > 0 && (
-        <section>
+        <Reveal><section>
           <SectionHead eyebrow="Browse" title="Popular categories" />
           <div className="mt-10 flex flex-wrap justify-center gap-2.5">
             {popular.map((c) => (
@@ -88,11 +89,11 @@ export function HomeSections({ categories }: { categories: Category[] }) {
               </Link>
             ))}
           </div>
-        </section>
+        </section></Reveal>
       )}
 
       {/* Popular collections */}
-      <section>
+      <Reveal><section>
         <SectionHead eyebrow="Curated" title="Popular collections" sub="Hand-curated sets — free, in HD and 4K." />
         <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLLECTIONS.map((c) => (
@@ -106,10 +107,10 @@ export function HomeSections({ categories }: { categories: Category[] }) {
             </Link>
           ))}
         </div>
-      </section>
+      </section></Reveal>
 
       {/* FAQ */}
-      <section>
+      <Reveal><section>
         <SectionHead eyebrow="Help" title="Frequently asked questions" />
         <div className="mx-auto mt-10 max-w-2xl space-y-3">
           {FAQS.map((f) => (
@@ -122,7 +123,7 @@ export function HomeSections({ categories }: { categories: Category[] }) {
             </details>
           ))}
         </div>
-      </section>
+      </section></Reveal>
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
     </div>
