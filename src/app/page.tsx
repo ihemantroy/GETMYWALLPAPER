@@ -8,10 +8,9 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { HeroHome } from "@/components/hero-home";
-import { StatsBand } from "@/components/stats-band";
 import { CollectionsRow } from "@/components/collections-row";
-import { Testimonials } from "@/components/testimonials";
-import { ComingSoon } from "@/components/coming-soon";
+import { TopContributors } from "@/components/top-contributors";
+import { ShareVision } from "@/components/share-vision";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
@@ -59,11 +58,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         /* ---------- CLEAN HOMEPAGE ---------- */
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
-          <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} />
-
-          <StatsBand wallpapers={total} categories={categories.length} downloads={downloads} />
+          <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} downloads={downloads} />
 
           <CollectionsRow covers={featured} />
+
+          <TopContributors />
+
+          <ShareVision cards={featured} />
 
           <section>
             <div className="mb-5 flex items-center justify-between">
@@ -82,17 +83,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                 cta: { href: "/admin/upload", label: "Upload wallpapers" },
               }}
             />
-            {wallpapers.length > 0 && (
-              <div className="mt-10 text-center">
-                <Link href="/?view=all" className="btn-accent focusable inline-flex h-11 items-center gap-2 rounded-full px-7 text-sm font-semibold">
-                  Browse all wallpapers
-                </Link>
-              </div>
-            )}
           </section>
-
-          <Testimonials />
-          <ComingSoon />
         </div>
       ) : (
         /* ---------- BROWSE ---------- */
