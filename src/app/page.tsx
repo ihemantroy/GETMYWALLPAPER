@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getWallpapersPage, getCategories, getFeatured, getWallpaperOfTheDay, PER_PAGE } from "@/lib/queries";
+import { getWallpapersPage, getCategories, getFeatured, getWallpaperOfTheDay, getHeroSetting, PER_PAGE } from "@/lib/queries";
 import { CategoryRail } from "@/components/category-rail";
 import { CategoryPills } from "@/components/category-pills";
 import { SearchFilter } from "@/components/search-filter";
@@ -8,7 +8,6 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { HeroHome } from "@/components/hero-home";
-import { TopContributors } from "@/components/top-contributors";
 import { ShareVision } from "@/components/share-vision";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
@@ -35,7 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   const filtering = Boolean(params.category || params.q || isFav);
   const showIntro = !filtering && !isBrowseAll && page === 1; // clean, image-first homepage
 
-  const [categories, featured, wotd, pageData] = await Promise.all([
+  const [categories, featured, wotd, pageData, heroSetting] = await Promise.all([
     getCategories(),
     showIntro ? getFeatured(8, params.device) : Promise.resolve([]),
     showIntro ? getWallpaperOfTheDay(params.device) : Promise.resolve(null),
@@ -43,6 +42,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       category: params.category, device: params.device,
       sort: params.sort ?? "latest", q: params.q, page,
     }),
+    showIntro ? getHeroSetting(params.device) : Promise.resolve(null),
   ]);
   const { items: wallpapers, total } = pageData;
   const catName = params.category ? categories.find((c) => c.slug === params.category)?.name : undefined;
@@ -59,11 +59,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         /* ---------- CLEAN HOMEPAGE ---------- */
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
-          <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} />
+          <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} heroOverride={heroSetting?.wallpaper ?? null} heroFocus={heroSetting?.focus} />
 
-          <TopContributors />
-
-          <ShareVision cards={featured} />
+          <ShareVision />
 
           <section>
             <div className="mb-5 flex items-center justify-between">

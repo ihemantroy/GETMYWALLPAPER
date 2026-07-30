@@ -31,7 +31,7 @@ function quality(w: number) {
 }
 
 export function HeroHome({
-  wotd, featured, categories, total, downloads, device,
+  wotd, featured, categories, total, downloads, device, heroOverride, heroFocus,
 }: {
   wotd: Wallpaper | null;
   featured: Wallpaper[];
@@ -39,13 +39,16 @@ export function HeroHome({
   total: number;
   downloads: number;
   device?: string;
+  heroOverride?: Wallpaper | null;
+  heroFocus?: string;
 }) {
   const nameById = new Map(categories.map((c) => [c.id, c.name]));
   const landscape = device !== "phone" && device !== "tablet";
   const cardAspect = landscape ? "aspect-[16/10]" : "aspect-[4/5]";
   const isLand = (w: Wallpaper) => w.width >= w.height;
-  // hero card is wide → always prefer a landscape image so it never zoom-crops
-  const hero = featured.find(isLand) ?? wotd ?? featured[0] ?? null;
+  // admin-chosen hero wins; otherwise prefer a landscape image so it never zoom-crops
+  const hero = heroOverride ?? featured.find(isLand) ?? wotd ?? featured[0] ?? null;
+  const heroPos = `center ${heroFocus ?? "center"}`;
   // on desktop show only landscape wallpapers; on phone only portrait — fall back if none
   const pool = landscape ? featured.filter(isLand) : featured.filter((w) => !isLand(w));
   const deck = pool.length ? pool : featured;
@@ -104,7 +107,7 @@ export function HeroHome({
                   src={renderUrl(hero.storage_path, { width: 1400, quality: 88 })}
                   alt={hero.title}
                   className="h-full w-full object-cover"
-                  style={{ backgroundColor: hero.dominant_color ?? "#0b0b12" }}
+                  style={{ backgroundColor: hero.dominant_color ?? "#0b0b12", objectPosition: heroPos }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
                 <span className="btn-accent absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">

@@ -156,3 +156,16 @@ export async function deleteCategory(id: string) {
   revalidatePath("/admin/categories");
   revalidatePath("/");
 }
+
+export async function setHero(device: string, wallpaperId: string, focus: string) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  await admin.from("homepage_hero").upsert({
+    device,
+    wallpaper_id: wallpaperId || null,
+    focus: focus || "center",
+    updated_at: new Date().toISOString(),
+  });
+  revalidatePath("/");
+  revalidatePath("/admin/hero");
+}

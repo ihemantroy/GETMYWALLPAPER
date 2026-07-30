@@ -181,3 +181,24 @@ export async function getDailyForVibe(vibe?: string): Promise<Wallpaper | null> 
   const day = Math.floor(Date.now() / 86_400_000); // changes once per day
   return items[day % items.length];
 }
+
+export async function getHeroSetting(
+  device?: string,
+): Promise<{ wallpaper: Wallpaper; focus: string } | null> {
+  const dev = device && device !== "all" ? device : "desktop";
+  const supabase = await createClient();
+  const { data: setting } = await supabase
+    .from("homepage_hero")
+    .select("wallpaper_id, focus")
+    .eq("device", dev)
+    .maybeSingle();
+  if (!setting?.wallpaper_id) return null;
+  const { data: w } = await supabase
+    .from("wallpapers")
+    .select("*")
+    .eq("id", setting.wallpaper_id)
+    .eq("status", "published")
+    .maybeSingle();
+  if (!w) return null;
+  return { wallpaper: w as Wallpaper, focus: (setting.focus as string) || "center" };
+}

@@ -42,20 +42,25 @@ export function DeviceSwitcher() {
     router.push(next.toString() ? `/?${next.toString()}` : "/", { scroll: false });
   }
 
+  const TABS: { slug: string | null; label: string; Icon: typeof Monitor }[] = [
+    ...OPTIONS.map((o) => ({ slug: o.slug as string | null, label: o.label, Icon: o.Icon })),
+    { slug: null, label: "All", Icon: Layers },
+  ];
+
   return (
     <div className="mb-8">
       <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-chalk-faint">
         Showing wallpapers for
       </p>
-      <div className="surface inline-flex flex-wrap gap-1 rounded-pill p-1">
-        {OPTIONS.map(({ slug, label, Icon }) => {
-          const on = current === slug;
+      <div className="surface grid grid-cols-4 gap-1 rounded-2xl p-1 sm:inline-flex sm:rounded-pill">
+        {TABS.map(({ slug, label, Icon }) => {
+          const on = slug ? current === slug : !current;
           return (
             <button
-              key={slug}
+              key={label}
               onClick={() => choose(slug)}
               aria-pressed={on}
-              className={`focusable inline-flex items-center gap-2 rounded-pill px-4 py-2 text-sm font-medium transition ${
+              className={`focusable flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-[11px] font-medium transition sm:flex-row sm:gap-1.5 sm:rounded-pill sm:px-4 sm:py-2 sm:text-sm ${
                 on ? "btn-accent" : "text-chalk-muted hover:text-chalk"
               }`}
             >
@@ -63,15 +68,6 @@ export function DeviceSwitcher() {
             </button>
           );
         })}
-        <button
-          onClick={() => choose(null)}
-          aria-pressed={!current}
-          className={`focusable inline-flex items-center gap-2 rounded-pill px-4 py-2 text-sm font-medium transition ${
-            !current ? "btn-accent" : "text-chalk-muted hover:text-chalk"
-          }`}
-        >
-          <Layers size={15} /> All
-        </button>
       </div>
     </div>
   );
