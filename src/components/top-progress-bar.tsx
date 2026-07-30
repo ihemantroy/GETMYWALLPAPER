@@ -95,8 +95,8 @@ function ProgressBar() {
         style={{
           height: "100%",
           width: `${width}%`,
-          background: "linear-gradient(90deg, #7C5CFF, #FF3D6E)",
-          boxShadow: "0 0 12px rgba(124,92,255,0.65)",
+          background: "linear-gradient(90deg, #6E8BFF, #9CB4FF)",
+          boxShadow: "0 0 12px rgba(110,139,255,0.6)",
           borderRadius: "0 4px 4px 0",
           opacity: phase === "done" ? 0 : 1,
           transition: phase === "done" ? "width .32s ease, opacity .32s ease" : "width .17s ease",

@@ -5,8 +5,8 @@
 :root {
   --font-display: "Clash Display", system-ui, sans-serif;
   --font-sans: "General Sans", system-ui, sans-serif;
-  --accent: #7C5CFF;
-  --accent-2: #FF3D6E;
+  --accent: #6E8BFF;
+  --accent-2: #9CB4FF;
 }
 
 * { border-color: theme("colors.line"); }
@@ -28,9 +28,9 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(58rem 44rem at 6% -6%, rgba(124, 92, 255, 0.20), transparent 56%),
-    radial-gradient(62rem 52rem at 108% 20%, rgba(232, 40, 78, 0.22), transparent 56%),
-    radial-gradient(46rem 40rem at 78% 108%, rgba(226, 64, 96, 0.12), transparent 55%);
+    radial-gradient(58rem 44rem at 6% -6%, rgba(110, 139, 255, 0.12), transparent 56%),
+    radial-gradient(62rem 52rem at 108% 20%, rgba(255, 255, 255, 0.04), transparent 56%),
+    radial-gradient(46rem 40rem at 78% 108%, rgba(110, 139, 255, 0.05), transparent 55%);
   pointer-events: none;
 }
 body::after {
@@ -109,7 +109,7 @@ body::after {
     border-top: 1px solid rgba(255, 255, 255, 0.10);
   }
   .text-accent {
-    background: linear-gradient(100deg, var(--accent), var(--accent-2), #FF6A3D, var(--accent));
+    background: linear-gradient(100deg, var(--accent), var(--accent-2), #C3D0FF, var(--accent));
     background-size: 200% auto;
     -webkit-background-clip: text; background-clip: text; color: transparent;
     animation: shimmer 6s linear infinite;
@@ -118,7 +118,7 @@ body::after {
   .btn-accent {
     background: linear-gradient(100deg, var(--accent), var(--accent-2));
     color: #fff;
-    box-shadow: 0 8px 24px -8px rgba(124, 92, 255, 0.6), inset 0 1px 0 0 rgba(255,255,255,0.25);
+    box-shadow: 0 8px 24px -8px rgba(110, 139, 255, 0.5), inset 0 1px 0 0 rgba(255,255,255,0.25);
   }
   .focusable { outline: none; }
   .focusable:focus-visible { box-shadow: 0 0 0 2px #080809, 0 0 0 4px var(--accent); }
@@ -132,7 +132,7 @@ body::after {
   .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
-::selection { background: rgba(124, 92, 255, 0.35); }
+::selection { background: rgba(110, 139, 255, 0.30); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
@@ -163,7 +163,7 @@ button:active, [role="button"]:active, a.btn-accent:active {
 
 /* ---- Animated gradient headline (fresh/trendy) ---- */
 .text-gradient {
-  background: linear-gradient(100deg, #7C5CFF, #C74BFF, #FF3D6E, #7C5CFF);
+  background: linear-gradient(100deg, #9CB4FF, #6E8BFF, #C3D0FF, #9CB4FF);
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -175,7 +175,7 @@ button:active, [role="button"]:active, a.btn-accent:active {
 
 /* ---- Minimal / premium refinements ---- */
 .text-gradient-soft {
-  background: linear-gradient(100deg, #b7a6ff, #7C5CFF 45%, #C74BFF);
+  background: linear-gradient(100deg, #C3D0FF, #6E8BFF 50%, #9CB4FF);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

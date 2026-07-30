@@ -8,7 +8,7 @@ const config: Config = {
         ink: { DEFAULT: "#080809", 2: "#0E0E11", 3: "#151519" },
         line: "rgba(255,255,255,0.10)",
         chalk: { DEFAULT: "#F5F5F7", muted: "#A6A6AE", faint: "#6A6A73" },
-        accent: { DEFAULT: "#7C5CFF", 2: "#C74BFF" },
+        accent: { DEFAULT: "#6E8BFF", 2: "#9CB4FF" },
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
@@ -18,7 +18,7 @@ const config: Config = {
       boxShadow: {
         glass: "0 8px 32px -8px rgba(0,0,0,0.6), inset 0 1px 0 0 rgba(255,255,255,0.08)",
         lift: "0 24px 70px -24px rgba(0,0,0,0.8), inset 0 1px 0 0 rgba(255,255,255,0.10)",
-        glow: "0 0 0 1px rgba(124,92,255,0.4), 0 16px 50px -12px rgba(124,92,255,0.5)",
+        glow: "0 0 0 1px rgba(110,139,255,0.4), 0 16px 50px -12px rgba(110,139,255,0.5)",
       },
       keyframes: {
         "fade-up": { from: { opacity: "0", transform: "translateY(10px)" }, to: { opacity: "1", transform: "translateY(0)" } },
