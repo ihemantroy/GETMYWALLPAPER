@@ -13,7 +13,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: #080809;
+  background: #050505;
   color: theme("colors.chalk.DEFAULT");
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -239,3 +239,24 @@ button:active, [role="button"]:active, a.btn-accent:active {
   100% { background-position: 100% 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .live-mesh { animation: none; } }
+
+/* ---- Premium: floating glass cards + testimonial marquee ---- */
+.float { animation: float-y 6s ease-in-out infinite; }
+.float-2 { animation: float-y 7.5s ease-in-out infinite; animation-delay: -1.5s; }
+.float-3 { animation: float-y 8.5s ease-in-out infinite; animation-delay: -3s; }
+@keyframes float-y { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .float,.float-2,.float-3 { animation: none; } }
+
+.marquee-x { display: flex; width: max-content; animation: marquee-x 40s linear infinite; }
+.marquee-x:hover { animation-play-state: paused; }
+@keyframes marquee-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-x { animation: none; } }
+
+/* mouse-glow spotlight for premium cards (set --mx/--my via JS) */
+.glow-card { position: relative; }
+.glow-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  background: radial-gradient(240px circle at var(--mx,50%) var(--my,50%), rgba(124,92,255,0.18), transparent 60%);
+  transition: opacity .3s; pointer-events: none;
+}
+.glow-card:hover::before { opacity: 1; }

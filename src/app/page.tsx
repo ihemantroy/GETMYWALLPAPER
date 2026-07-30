@@ -8,6 +8,9 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { HeroHome } from "@/components/hero-home";
+import { StatsBand } from "@/components/stats-band";
+import { CollectionsRow } from "@/components/collections-row";
+import { Testimonials } from "@/components/testimonials";
 import { ComingSoon } from "@/components/coming-soon";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
@@ -45,6 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   ]);
   const { items: wallpapers, total } = pageData;
   const catName = params.category ? categories.find((c) => c.slug === params.category)?.name : undefined;
+  const downloads = [...featured, ...wallpapers].reduce((s, w) => s + (w.download_count ?? 0), 0);
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-8">
@@ -56,6 +60,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
           <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} />
+
+          <StatsBand wallpapers={total} categories={categories.length} downloads={downloads} />
+
+          <CollectionsRow covers={featured} />
 
           <section>
             <div className="mb-5 flex items-center justify-between">
@@ -83,6 +91,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
             )}
           </section>
 
+          <Testimonials />
           <ComingSoon />
         </div>
       ) : (

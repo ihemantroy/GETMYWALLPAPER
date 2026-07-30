@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: { DEFAULT: "#080809", 2: "#0E0E11", 3: "#151519" },
+        ink: { DEFAULT: "#050505", 2: "#0E0E11", 3: "#151519" },
         line: "rgba(255,255,255,0.10)",
         chalk: { DEFAULT: "#F5F5F7", muted: "#A6A6AE", faint: "#6A6A73" },
         accent: { DEFAULT: "#7C5CFF", 2: "#C74BFF" },

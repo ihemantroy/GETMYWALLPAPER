@@ -100,7 +100,7 @@ export function HeroHome({
           {topCat && (
             <Link
               href={`/?category=${topCat.slug}`}
-              className="focusable card-min group rounded-3xl p-5"
+              className="focusable card-min group rounded-3xl p-5 float"
             >
               <div className="flex items-center justify-between">
                 <p className="flex items-center gap-1.5 text-xs font-medium text-chalk-muted">
@@ -124,7 +124,7 @@ export function HeroHome({
           )}
 
           {/* Top this week */}
-          <Link href="/?sort=popular" className="focusable card-min group flex items-center justify-between rounded-3xl p-5">
+          <Link href="/?sort=popular" className="focusable card-min group flex items-center justify-between rounded-3xl p-5 float-2">
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium text-chalk-muted">
                 <TrendingUp size={13} className="text-accent" /> Top rated
@@ -140,7 +140,7 @@ export function HeroHome({
           </Link>
 
           {/* Contribute */}
-          <div className="card-min rounded-3xl p-5">
+          <div className="card-min rounded-3xl p-5 float-3">
             <p className="flex items-center gap-1.5 text-xs font-medium text-chalk-muted">
               <Upload size={13} className="text-accent" /> Contribute
             </p>
