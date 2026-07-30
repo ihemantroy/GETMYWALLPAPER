@@ -168,7 +168,7 @@ export function HeroHome({
             {trending.map((w) => (
               <div key={w.id} className="group relative overflow-hidden rounded-2xl border border-white/[0.06]">
                 <Link href={`/wallpaper/${w.slug}`} className="block">
-                  <div className="relative aspect-[3/4] overflow-hidden">
+                  <div className="relative aspect-[4/3] overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={renderUrl(w.storage_path, { width: 500, quality: 78 })}
