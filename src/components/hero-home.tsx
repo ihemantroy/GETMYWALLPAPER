@@ -31,18 +31,21 @@ function quality(w: number) {
 }
 
 export function HeroHome({
-  wotd, featured, categories, total, downloads,
+  wotd, featured, categories, total, downloads, device,
 }: {
   wotd: Wallpaper | null;
   featured: Wallpaper[];
   categories: Category[];
   total: number;
   downloads: number;
+  device?: string;
 }) {
   const nameById = new Map(categories.map((c) => [c.id, c.name]));
   const hero = wotd ?? featured[0] ?? null;
   const thumbs = featured.slice(0, 3);
   const trending = featured.slice(0, 6);
+  const landscape = device !== "phone" && device !== "tablet";
+  const cardAspect = landscape ? "aspect-[16/10]" : "aspect-[4/5]";
 
   const stats = [
     { icon: ImageIcon, node: <CountUp value={total} suffix="+" />, label: "Wallpapers" },
@@ -152,11 +155,11 @@ export function HeroHome({
               View All <ChevronRight size={14} className="inline" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {trending.slice(0, 5).map((w) => (
+          <div className={`grid gap-4 ${landscape ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
+            {trending.slice(0, landscape ? 6 : 5).map((w) => (
               <div key={w.id} className="glow-card group relative overflow-hidden rounded-2xl border border-white/[0.06]">
                 <Link href={`/wallpaper/${w.slug}`} className="block">
-                  <div className="relative aspect-[4/5] overflow-hidden">
+                  <div className={`relative ${cardAspect} overflow-hidden`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={renderUrl(w.storage_path, { width: 500, quality: 78 })}

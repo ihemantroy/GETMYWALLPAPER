@@ -12,8 +12,10 @@ const COLLECTIONS = [
   { slug: "4k", name: "Ultra 4K" },
 ];
 
-export function CollectionsRow({ covers }: { covers: Wallpaper[] }) {
+export function CollectionsRow({ covers, device }: { covers: Wallpaper[]; device?: string }) {
   if (!covers.length) return null;
+  const landscape = device !== "phone" && device !== "tablet";
+  const aspect = landscape ? "aspect-[16/10]" : "aspect-[4/5]";
   return (
     <section id="collections" className="scroll-mt-24">
       <div className="mb-5 flex items-center justify-between">
@@ -31,7 +33,7 @@ export function CollectionsRow({ covers }: { covers: Wallpaper[] }) {
               href={`/wallpapers/${c.slug}`}
               className="focusable group relative block overflow-hidden rounded-3xl border border-white/[0.06]"
             >
-              <div className="relative aspect-[16/10] overflow-hidden">
+              <div className={`relative ${aspect} overflow-hidden`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={renderUrl(cover.storage_path, { width: 700, quality: 78 })}

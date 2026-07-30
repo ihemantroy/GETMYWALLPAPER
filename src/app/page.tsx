@@ -58,9 +58,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         /* ---------- CLEAN HOMEPAGE ---------- */
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
-          <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} downloads={downloads} />
+          <HeroHome wotd={wotd} featured={featured} categories={categories} total={total} downloads={downloads} device={params.device} />
 
-          <CollectionsRow covers={featured} />
+          <CollectionsRow covers={featured} device={params.device} />
 
           <TopContributors />
 
