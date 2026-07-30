@@ -11,7 +11,6 @@ import { WallpaperCard } from "@/components/wallpaper-card";
 import { FavoritesView } from "@/components/favorites-view";
 import { Countdown } from "@/components/countdown";
 import { Pagination } from "@/components/pagination";
-import { YourDaily } from "@/components/your-daily";
 import { HomeSections } from "@/components/home-sections";
 import { CountUp } from "@/components/count-up";
 import { DeviceSwitcher } from "@/components/device-switcher";
@@ -152,7 +151,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               </div>
             </section>
           )}
-          <YourDaily />
         </>
       )}
 

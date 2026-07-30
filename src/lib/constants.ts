@@ -85,3 +85,12 @@ export const SHORTCUTS = {
 // public VAPID key for web-push (safe to ship to the browser)
 export const VAPID_PUBLIC_KEY =
   "BPT0vn_-UEZqJZ4FCuid03fL-30avQQVBDviZGNHSBnwpkgT-JTzERtommpv7zbj6T59Kl9F81Y6VjId8o67MVg";
+
+// Full "Download in different resolutions" grid (like the big wallpaper sites)
+export const RESOLUTION_GRID: { group: string; sizes: [number, number][] }[] = [
+  { group: "Popular Desktop", sizes: [[1366, 768], [1920, 1080], [2560, 1440], [3840, 2160], [1600, 900], [1920, 1200]] },
+  { group: "Popular Mobile", sizes: [[720, 1280], [1080, 1920], [1080, 2340], [1170, 2532], [1440, 3200]] },
+  { group: "Ultra 4K / 8K", sizes: [[3840, 2160], [3840, 2400], [5120, 2880], [7680, 4320]] },
+  { group: "Apple", sizes: [[1179, 2556], [1290, 2796], [1668, 2388], [2048, 2732], [2560, 1600], [5120, 2880]] },
+  { group: "Android", sizes: [[1080, 2400], [1440, 2960], [1440, 3200], [1080, 2280]] },
+];

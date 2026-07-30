@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Eye, Heart } from "lucide-react";
 import { getWallpaperBySlug, getRelated } from "@/lib/queries";
 import { DevicePreview } from "@/components/device-preview";
+import { ResolutionGrid } from "@/components/resolution-grid";
 import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoriteButton } from "@/components/favorite-button";
 import { DownloadCounter } from "@/components/download-counter";
@@ -111,6 +112,10 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
       </div>
 
       <DevicePreview w={w} />
+
+      <div className="mt-6">
+        <ResolutionGrid w={w} />
+      </div>
 
       <PaletteStrip src={renderUrl(w.storage_path, { width: 200 })} />
 
