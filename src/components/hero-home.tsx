@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import type { Wallpaper, Category } from "@/lib/types";
 import { renderUrl } from "@/lib/supabase/storage";
-import { FavoriteButton } from "@/components/favorite-button";
+import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { CountUp } from "@/components/count-up";
 
 const CAT_STRIP = [
@@ -160,30 +160,7 @@ export function HeroHome({
               View All <ChevronRight size={14} className="inline" />
             </Link>
           </div>
-          <div className={`grid gap-4 ${landscape ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
-            {trending.slice(0, landscape ? 6 : 5).map((w) => (
-              <div key={w.id} className="glow-card group relative overflow-hidden rounded-2xl border border-white/[0.06]">
-                <Link href={`/wallpaper/${w.slug}`} className="block">
-                  <div className={`relative ${cardAspect} overflow-hidden`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={renderUrl(w.storage_path, { width: 500, quality: 78 })}
-                      alt={w.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      style={{ backgroundColor: w.dominant_color ?? "#12121b" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
-                    <span className="absolute right-2.5 top-2.5 rounded-md bg-black/50 px-2 py-0.5 text-[11px] font-semibold backdrop-blur">{quality(w.width)}</span>
-                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-3">
-                      <span className="flex items-center gap-1 text-xs font-medium text-white"><Download size={12} /> {fmt(w.download_count ?? 0)}</span>
-                      <span className="truncate pl-2 text-[11px] text-white/60">{w.category_id ? nameById.get(w.category_id) : ""}</span>
-                    </div>
-                  </div>
-                </Link>
-                <div className="absolute left-2.5 top-2.5"><FavoriteButton id={w.id} /></div>
-              </div>
-            ))}
-          </div>
+          <WallpaperGrid wallpapers={trending.slice(0, 10)} categories={categories} device={device} />
         </section>
       )}
     </div>
