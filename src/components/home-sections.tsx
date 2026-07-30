@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Sparkles, Monitor, Download, ShieldCheck, Zap, Layers } from "lucide-react";
 import type { Category } from "@/lib/types";
 import { Reveal } from "@/components/reveal";
+import { ComingSoon } from "@/components/coming-soon";
 
 const WHY = [
   { icon: Download, title: "Free, full-resolution", body: "Every wallpaper downloads in its original quality — no paywall, no watermark, no sign-up." },
@@ -108,6 +109,9 @@ export function HomeSections({ categories }: { categories: Category[] }) {
           ))}
         </div>
       </section></Reveal>
+
+      {/* Coming soon */}
+      <Reveal><ComingSoon /></Reveal>
 
       {/* FAQ */}
       <Reveal><section>

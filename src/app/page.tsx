@@ -57,22 +57,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       {showIntro && (
         <>
           <section className="mb-16 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium tracking-wide text-chalk-muted backdrop-blur">
+            <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium tracking-wide text-chalk-muted backdrop-blur">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
               </span>
               New wallpapers, every day
             </div>
-            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-[5.25rem] sm:leading-[0.98]">
+            <h1 className="animate-fade-up mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-[5.25rem] sm:leading-[0.98]" style={{ animationDelay: "0.08s" }}>
               Wallpapers that<br />
               <span className="text-gradient-soft">fit your screen.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-chalk-muted">
+            <p className="animate-fade-up mt-6 max-w-lg text-lg leading-relaxed text-chalk-muted" style={{ animationDelay: "0.16s" }}>
               A calm, premium space for wallpapers that actually fit — sized to your exact screen,
               free forever, and refreshed every day.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "0.24s" }}>
               <Countdown />
               <a
                 href="/api/random"
@@ -81,7 +81,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                 <Shuffle size={15} /> Surprise me
               </a>
             </div>
-            <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/[0.06] pt-6">
+            <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/[0.06] pt-6" style={{ animationDelay: "0.32s" }}>
               <div>
                 <p className="font-display text-2xl font-semibold tracking-tight text-chalk"><CountUp value={total} suffix="+" /></p>
                 <p className="mt-0.5 text-xs uppercase tracking-widest text-chalk-faint">Wallpapers</p>

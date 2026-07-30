@@ -202,8 +202,8 @@ button:active, [role="button"]:active, a.btn-accent:active {
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
-  filter: blur(70px);
-  opacity: 0.55;
+  filter: blur(58px);
+  opacity: 0.72;
 }
 .aurora::before, .aurora::after {
   content: "";
@@ -213,13 +213,29 @@ button:active, [role="button"]:active, a.btn-accent:active {
 .aurora::before {
   width: 46vw; height: 46vw; left: -8%; top: -18%;
   background: radial-gradient(circle, rgba(124, 92, 255, 0.55), transparent 60%);
-  animation: aurora-a 15s ease-in-out infinite alternate;
+  animation: aurora-a 11s ease-in-out infinite alternate;
 }
 .aurora::after {
   width: 42vw; height: 42vw; right: -6%; top: -10%;
   background: radial-gradient(circle, rgba(255, 61, 110, 0.42), transparent 60%);
-  animation: aurora-b 18s ease-in-out infinite alternate;
+  animation: aurora-b 13s ease-in-out infinite alternate;
 }
 @keyframes aurora-a { to { transform: translate(22%, 18%) scale(1.25); } }
 @keyframes aurora-b { to { transform: translate(-18%, 22%) scale(1.15); } }
 @media (prefers-reduced-motion: reduce) { .aurora::before, .aurora::after { animation: none; } }
+
+/* ---- Live-wallpaper "preview" motion (Coming Soon card) ---- */
+.live-mesh {
+  background:
+    radial-gradient(40% 60% at 20% 30%, rgba(124,92,255,0.9), transparent 60%),
+    radial-gradient(45% 55% at 80% 25%, rgba(255,61,110,0.8), transparent 60%),
+    radial-gradient(50% 60% at 55% 85%, rgba(255,106,61,0.7), transparent 60%),
+    #0b0b12;
+  background-size: 200% 200%;
+  animation: live-drift 8s ease-in-out infinite alternate;
+}
+@keyframes live-drift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .live-mesh { animation: none; } }
