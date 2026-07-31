@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Eye, Heart } from "lucide-react";
+import { Download } from "lucide-react";
 import { getWallpaperBySlug, getRelated } from "@/lib/queries";
-import { DevicePreview } from "@/components/device-preview";
-import { ResolutionGrid } from "@/components/resolution-grid";
 import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoriteButton } from "@/components/favorite-button";
-import { DownloadCounter } from "@/components/download-counter";
 import { ShareButton } from "@/components/share-button";
+import { DownloadButton } from "@/components/download-button";
 import { AdSlot } from "@/components/ad-slot";
-import { AmbientTint } from "@/components/ambient-tint";
-import { PaletteStrip } from "@/components/palette-strip";
 import { renderUrl, publicUrl } from "@/lib/supabase/storage";
 import { formatCount } from "@/lib/utils";
-import { SITE } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -36,6 +31,10 @@ export async function generateMetadata({
   };
 }
 
+function quality(px: number) {
+  return px >= 7000 ? "8K" : px >= 3840 ? "4K" : px >= 2560 ? "2K" : "HD";
+}
+
 export default async function WallpaperPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const w = await getWallpaperBySlug(slug);
@@ -43,6 +42,7 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
   const related = await getRelated(w);
 
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
+  const preview = renderUrl(w.storage_path, { width: 1600, quality: 92 });
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -71,58 +71,71 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pb-16 pt-28">
-      <AmbientTint src={renderUrl(w.storage_path, { width: 48 })} />
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="mb-6 flex items-center gap-2 text-sm text-chalk-muted">
+      {/* breadcrumb */}
+      <nav className="mb-5 flex items-center gap-2 text-sm text-chalk-muted">
         <Link href="/" className="hover:text-chalk">Home</Link>
-        <span>/</span>
+        <span className="text-chalk-faint">/</span>
         <Link href={`/?device=${w.device}`} className="capitalize hover:text-chalk">{w.device}</Link>
-        <span>/</span>
-        <span className="text-chalk">{w.title}</span>
+        <span className="text-chalk-faint">/</span>
+        <span className="truncate text-chalk">{w.title}</span>
       </nav>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{w.title}</h1>
-          {w.description && <p className="mt-2 max-w-2xl text-chalk-muted">{w.description}</p>}
-          <div className="mt-3 flex items-center gap-4 text-sm text-chalk-muted">
-            <span className="inline-flex items-center gap-1"><Eye size={14} /> {formatCount(w.view_count)}</span>
-            <DownloadCounter initial={w.download_count} />
-            <span className="inline-flex items-center gap-1"><Heart size={14} /> {formatCount(w.like_count)}</span>
+      {/* title row + download */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full btn-primary font-display text-lg font-bold">W</span>
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-lg font-semibold tracking-tight sm:text-xl">{w.title}</h1>
+            <p className="text-sm text-chalk-muted">GetYourWallpaper</p>
           </div>
-          {w.credit && (
-            <p className="mt-2 text-sm text-chalk-muted">
-              Credit:{" "}
-              {w.credit_url ? (
-                <a href={w.credit_url} target="_blank" rel="noopener noreferrer" className="text-chalk underline underline-offset-2 hover:text-accent">
-                  {w.credit}
-                </a>
-              ) : (
-                <span className="text-chalk">{w.credit}</span>
-              )}
-            </p>
-          )}
         </div>
         <div className="flex items-center gap-2">
-          <ShareButton slug={w.slug} />
           <FavoriteButton id={w.id} className="h-11 w-11" />
+          <ShareButton slug={w.slug} />
+          <DownloadButton w={w} />
         </div>
       </div>
 
-      <DevicePreview w={w} />
-
-      <div className="mt-6">
-        <ResolutionGrid w={w} />
+      {/* the image — big, centered, flat */}
+      <div className="surface relative overflow-hidden rounded-card p-2 sm:p-4">
+        <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full glass-strong px-3 py-1 text-xs font-semibold text-chalk">
+          {quality(Math.max(w.width, w.height))} · {w.width}×{w.height}
+        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={preview}
+          alt={w.title}
+          className="mx-auto max-h-[74vh] w-auto max-w-full rounded-lg object-contain"
+          style={{ backgroundColor: w.dominant_color ?? "rgb(var(--ink-3))" }}
+        />
       </div>
 
-      <PaletteStrip src={renderUrl(w.storage_path, { width: 200 })} />
+      {/* meta line */}
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-chalk-muted">
+        <span className="inline-flex items-center gap-1.5"><Download size={14} /> {formatCount(w.download_count)} downloads</span>
+        <span className="capitalize">For {w.device}</span>
+        {w.credit && (
+          <span>
+            Credit:{" "}
+            {w.credit_url ? (
+              <a href={w.credit_url} target="_blank" rel="noopener noreferrer" className="text-chalk underline underline-offset-2 hover:text-accent">{w.credit}</a>
+            ) : (
+              <span className="text-chalk">{w.credit}</span>
+            )}
+          </span>
+        )}
+      </div>
 
+      {w.description && <p className="mt-3 max-w-2xl text-sm text-chalk-muted">{w.description}</p>}
+
+      {/* tags */}
       {w.tags && w.tags.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           {w.tags.map((t) => (
-            <Link key={t} href={`/?q=${t}`} className="focusable surface rounded-pill px-3 py-1.5 text-xs text-chalk-muted hover:text-chalk">
+            <Link key={t} href={`/?q=${t}`} className="focusable rounded-full border border-line px-3 py-1.5 text-xs text-chalk-muted transition hover:text-chalk">
               #{t}
             </Link>
           ))}

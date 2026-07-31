@@ -3,11 +3,12 @@ import { SITE, DEVICES } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-line px-6 py-14">
-      <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(3,1fr)]">
+    <footer className="mt-24 border-t border-line px-4 py-14 sm:px-6">
+      <div className="mx-auto grid max-w-[1600px] gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(3,1fr)]">
         <div>
-          <p className="font-display text-lg font-bold">
-            <span className="text-accent">Get</span>YourWallpaper
+          <p className="flex items-center gap-2.5 font-display text-lg font-semibold">
+            <span className="grid h-8 w-8 place-items-center rounded-lg btn-primary text-base font-bold">W</span>
+            GetYour<span className="text-accent">Wallpaper</span>
           </p>
           <p className="mt-2 max-w-xs text-sm text-chalk-muted">{SITE.tagline}</p>
           <p className="mt-4 max-w-xs text-xs text-chalk-faint">
@@ -41,7 +42,7 @@ export function Footer() {
         </FooterCol>
       </div>
 
-      <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-2 border-t border-line pt-6 text-xs text-chalk-faint sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto mt-10 flex max-w-[1600px] flex-col gap-2 border-t border-line pt-6 text-xs text-chalk-faint sm:flex-row sm:items-center sm:justify-between">
         <span>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</span>
         <span>Wallpapers with taste.</span>
       </div>

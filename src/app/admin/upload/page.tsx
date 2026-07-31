@@ -37,7 +37,6 @@ export default function AdminUploadPage() {
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [schedule, setSchedule] = useState("");
-  const [featured, setFeatured] = useState(false);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
@@ -100,7 +99,6 @@ export default function AdminUploadPage() {
           credit_url: creditUrl || null,
           tags: tagList,
           scheduled_for: schedule || null,
-          is_featured: featured,
         });
 
         setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: "done" } : it)));
@@ -220,15 +218,6 @@ export default function AdminUploadPage() {
             className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk [color-scheme:dark]"
           />
         </div>
-        <label className="flex items-center gap-3 self-end pb-2">
-          <input
-            type="checkbox"
-            checked={featured}
-            onChange={(e) => setFeatured(e.target.checked)}
-            className="h-4 w-4 accent-[#7C5CFF]"
-          />
-          <span className="text-sm">Feature on homepage</span>
-        </label>
       </GlassCard>
 
       {items.length > 0 && (
