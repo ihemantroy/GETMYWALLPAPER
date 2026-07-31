@@ -103,22 +103,34 @@ export function HeroHome({
 
         {/* right — featured card */}
         {hero && (
-          <div className="animate-fade-up relative overflow-hidden rounded-3xl border border-white/[0.08]" style={{ animationDelay: "0.1s" }}>
-            <Link href={`/wallpaper/${hero.slug}`} className="block">
-              <div className={`relative ${heroAspect}`}>
+          <div
+            className={`animate-fade-up relative mx-auto w-full overflow-hidden rounded-3xl border border-white/[0.08] ${heroFit === "contain" ? "" : heroAspect}`}
+            style={
+              heroFit === "contain"
+                ? {
+                    animationDelay: "0.1s",
+                    aspectRatio: `${hero.width || 16} / ${hero.height || 10}`,
+                    maxWidth: hero.height > hero.width ? 360 : undefined,
+                    backgroundColor: hero.dominant_color ?? "#0b0b12",
+                  }
+                : { animationDelay: "0.1s" }
+            }
+          >
+            <Link href={`/wallpaper/${hero.slug}`} className="block h-full">
+              <div className="relative h-full w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={renderUrl(hero.storage_path, { width: 1400, quality: 88 })}
                   alt={hero.title}
-                  className={`h-full w-full ${heroFitClass}`}
+                  className="h-full w-full object-cover"
                   style={{ backgroundColor: hero.dominant_color ?? "#0b0b12", objectPosition: heroPos }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
                 <span className="btn-accent absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
                   <Star size={12} className="fill-white" /> Editor&apos;s Choice
                 </span>
-                <div className="absolute bottom-4 left-5">
-                  <p className="font-display text-2xl font-bold text-white">{hero.title}</p>
+                <div className="absolute bottom-4 left-5 right-5">
+                  <p className="truncate font-display text-2xl font-bold text-white">{hero.title}</p>
                   {hero.credit && <p className="text-sm text-white/70">by {hero.credit}</p>}
                 </div>
               </div>
