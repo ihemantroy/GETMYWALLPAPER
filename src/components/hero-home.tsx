@@ -49,10 +49,6 @@ export function HeroHome({
   const isLand = (w: Wallpaper) => w.width >= w.height;
   // admin-chosen hero wins; otherwise prefer a landscape image so it never zoom-crops
   const hero = heroOverride ?? featured.find(isLand) ?? wotd ?? featured[0] ?? null;
-  const heroPos = `center ${heroFocus ?? "center"}`;
-  // the hero card itself is landscape on desktop, portrait on phone — so the chosen image shows in its true shape
-  const heroAspect = landscape ? "aspect-[16/10]" : "aspect-[3/4]";
-  const heroFitClass = heroFit === "contain" ? "object-contain" : "object-cover";
   // on desktop show only landscape wallpapers; on phone only portrait — fall back if none
   const pool = landscape ? featured.filter(isLand) : featured.filter((w) => !isLand(w));
   const deck = pool.length ? pool : featured;
@@ -101,38 +97,24 @@ export function HeroHome({
           </div>
         </div>
 
-        {/* right — featured card */}
+        {/* right — featured card: auto portrait/landscape, capped, no crop */}
         {hero && (
-          <div
-            className={`animate-fade-up relative mx-auto w-full overflow-hidden rounded-3xl border border-white/[0.08] ${heroFit === "contain" ? "" : heroAspect}`}
-            style={
-              heroFit === "contain"
-                ? {
-                    animationDelay: "0.1s",
-                    aspectRatio: `${hero.width || 16} / ${hero.height || 10}`,
-                    maxWidth: hero.height > hero.width ? 360 : undefined,
-                    backgroundColor: hero.dominant_color ?? "#0b0b12",
-                  }
-                : { animationDelay: "0.1s" }
-            }
-          >
-            <Link href={`/wallpaper/${hero.slug}`} className="block h-full">
-              <div className="relative h-full w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={renderUrl(hero.storage_path, { width: 1400, quality: 88 })}
-                  alt={hero.title}
-                  className="h-full w-full object-cover"
-                  style={{ backgroundColor: hero.dominant_color ?? "#0b0b12", objectPosition: heroPos }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
-                <span className="btn-accent absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
-                  <Star size={12} className="fill-white" /> Editor&apos;s Choice
-                </span>
-                <div className="absolute bottom-4 left-5 right-5">
-                  <p className="truncate font-display text-2xl font-bold text-white">{hero.title}</p>
-                  {hero.credit && <p className="text-sm text-white/70">by {hero.credit}</p>}
-                </div>
+          <div className="animate-fade-up relative mx-auto w-fit max-w-full" style={{ animationDelay: "0.1s" }}>
+            <Link href={`/wallpaper/${hero.slug}`} className="block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={renderUrl(hero.storage_path, { width: 1200, quality: 88 })}
+                alt={hero.title}
+                className="block max-h-[38vh] w-auto max-w-full rounded-3xl border border-white/[0.08] object-cover sm:max-h-[400px]"
+                style={{ backgroundColor: hero.dominant_color ?? "#0b0b12" }}
+              />
+              <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-t from-ink/85 via-transparent to-transparent" />
+              <span className="btn-accent absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
+                <Star size={12} className="fill-white" /> Editor&apos;s Choice
+              </span>
+              <div className="absolute bottom-4 left-5 right-5">
+                <p className="truncate font-display text-2xl font-bold text-white">{hero.title}</p>
+                {hero.credit && <p className="text-sm text-white/70">by {hero.credit}</p>}
               </div>
             </Link>
             {thumbs.length > 1 && (
