@@ -170,3 +170,39 @@ export async function setHero(device: string, wallpaperId: string, focus: string
   revalidatePath("/");
   revalidatePath("/admin/hero");
 }
+
+/* ----------------------------- Testimonials ----------------------------- */
+
+export async function createTestimonial(input: {
+  name: string;
+  text: string;
+  role?: string | null;
+  rating?: number;
+}) {
+  await assertAdmin();
+  const name = input.name.trim();
+  const text = input.text.trim();
+  if (!name || !text) throw new Error("Name and review text are required");
+  const admin = createAdminClient();
+  const { count } = await admin.from("testimonials").select("*", { count: "exact", head: true });
+  const rating = Math.min(5, Math.max(1, input.rating ?? 5));
+  const { error } = await admin.from("testimonials").insert({
+    name,
+    text,
+    role: input.role?.trim() || null,
+    rating,
+    sort_order: (count ?? 0) + 1,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/testimonials");
+  revalidatePath("/");
+}
+
+export async function deleteTestimonial(id: string) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  const { error } = await admin.from("testimonials").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/testimonials");
+  revalidatePath("/");
+}

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Wallpaper, Category } from "@/lib/types";
+import type { Wallpaper, Category, Testimonial } from "@/lib/types";
 import { colorBucket } from "@/lib/utils";
 
 type BrowseParams = {
@@ -205,4 +205,32 @@ export async function getHeroSetting(
     focus: (setting.focus as string) || "center",
     fit: (setting.fit as string) || "cover",
   };
+}
+
+/* ----------------------------- Testimonials ----------------------------- */
+
+// Shown until the admin adds their own via /admin/testimonials.
+// Includes the names Hemant requested so the section always looks populated.
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
+  { name: "Pritam", text: "Every wallpaper just fits — no cropping, no stretching. My home screen finally looks premium.", role: "Phone", rating: 5 },
+  { name: "Aman", text: "Grabbed a 4K one for my laptop and it looks unreal. The quality here is on another level.", role: "Desktop", rating: 5 },
+  { name: "Shubham", text: "Clean, fast, and free. One-tap download at my exact resolution is genius.", role: "Phone", rating: 5 },
+  { name: "Bhavya", text: "Feels like a premium app, not a website. Beautiful design all over.", role: "Tablet", rating: 5 },
+  { name: "Chhavi", text: "Love the daily drops. There's always something fresh to try.", role: "Phone", rating: 5 },
+  { name: "Hemant", text: "This is exactly how a wallpaper app should feel. Obsessed.", role: "Desktop", rating: 5 },
+];
+
+export async function getTestimonials(): Promise<Testimonial[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("id, name, text, role, rating")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error || !data || data.length === 0) return DEFAULT_TESTIMONIALS;
+    return data as Testimonial[];
+  } catch {
+    return DEFAULT_TESTIMONIALS;
+  }
 }

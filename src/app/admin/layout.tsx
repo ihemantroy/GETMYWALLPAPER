@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Upload, Inbox, Images, Tags, DownloadCloud, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { LayoutDashboard, Upload, Inbox, Images, Tags, DownloadCloud, ArrowLeft, Image as ImageIcon, MessageSquareQuote } from "lucide-react";
 import { isAdmin, getSessionUser } from "@/lib/auth";
 
 const links = [
@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/queue", label: "Review queue", icon: Inbox },
   { href: "/admin/wallpapers", label: "Wallpapers", icon: Images },
   { href: "/admin/categories", label: "Categories", icon: Tags },
+  { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

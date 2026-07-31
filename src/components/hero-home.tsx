@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Sparkles, Flame, Download, ChevronRight, ChevronLeft, Upload, Compass,
-  Image as ImageIcon, Users, Layers, Zap, Car, Rocket, Gamepad2, Moon, Palette, Ghost, Mountain, Building2, Flower2, Grid3x3, Star,
+  Image as ImageIcon, Users, Layers, Zap, Car, Rocket, Gamepad2, Moon, Palette, Ghost, Mountain, Building2, Flower2, Grid3x3,
 } from "lucide-react";
 import type { Wallpaper, Category } from "@/lib/types";
 import { renderUrl } from "@/lib/supabase/storage";
@@ -109,9 +109,6 @@ export function HeroHome({
                 style={{ backgroundColor: hero.dominant_color ?? "#0b0b12" }}
               />
               <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-t from-ink/85 via-transparent to-transparent" />
-              <span className="btn-accent absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
-                <Star size={12} className="fill-white" /> Editor&apos;s Choice
-              </span>
               <div className="absolute bottom-4 left-5 right-5">
                 <p className="truncate font-display text-2xl font-bold text-white">{hero.title}</p>
                 {hero.credit && <p className="text-sm text-white/70">by {hero.credit}</p>}

@@ -49,3 +49,11 @@ export interface Profile {
   is_admin: boolean;
   created_at: string;
 }
+
+export interface Testimonial {
+  id?: string;
+  name: string;
+  text: string;
+  role?: string | null;
+  rating?: number;
+}

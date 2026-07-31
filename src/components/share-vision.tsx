@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Upload, CloudUpload } from "lucide-react";
+import { Upload, CloudUpload, Smartphone, Sparkles, Heart } from "lucide-react";
+
+const CARDS = [
+  { icon: Smartphone, label: "Any device", cls: "left-[18%] -rotate-12 from-accent/40 to-accent-2/15 float" },
+  { icon: Sparkles, label: "Get featured", cls: "left-[42%] rotate-3 from-accent-2/35 to-accent/15 float-2" },
+  { icon: Heart, label: "Loved daily", cls: "left-[64%] rotate-12 from-white/10 to-white/[0.02] float-3" },
+];
 
 export function ShareVision() {
   return (
@@ -27,15 +33,14 @@ export function ShareVision() {
           <div className="absolute left-1/2 top-1/2 z-10 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full btn-accent shadow-glow">
             <CloudUpload size={30} className="text-white" />
           </div>
-          {[0, 1, 2].map((i) => (
+          {CARDS.map(({ icon: Icon, label, cls }) => (
             <div
-              key={i}
-              className={`absolute top-1/2 h-36 w-28 -translate-y-1/2 rounded-2xl border border-white/15 shadow-lift backdrop-blur-xl bg-gradient-to-br ${
-                i === 0 ? "left-[18%] -rotate-12 from-accent/40 to-accent-2/15 float"
-                : i === 1 ? "left-[42%] rotate-3 from-accent-2/35 to-accent/15 float-2"
-                : "left-[64%] rotate-12 from-white/10 to-white/[0.02] float-3"
-              }`}
-            />
+              key={label}
+              className={`absolute top-1/2 flex h-36 w-28 -translate-y-1/2 flex-col items-center justify-center gap-2 rounded-2xl border border-white/15 shadow-lift backdrop-blur-xl bg-gradient-to-br ${cls}`}
+            >
+              <Icon size={24} className="text-white/85" />
+              <span className="text-[11px] font-medium text-white/70">{label}</span>
+            </div>
           ))}
         </div>
       </div>

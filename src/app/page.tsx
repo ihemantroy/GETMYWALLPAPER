@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getWallpapersPage, getCategories, getFeatured, getWallpaperOfTheDay, getHeroSetting, PER_PAGE } from "@/lib/queries";
+import { getWallpapersPage, getCategories, getFeatured, getWallpaperOfTheDay, getHeroSetting, getTestimonials, PER_PAGE } from "@/lib/queries";
 import { CategoryRail } from "@/components/category-rail";
 import { CategoryPills } from "@/components/category-pills";
 import { SearchFilter } from "@/components/search-filter";
@@ -35,7 +35,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   const filtering = Boolean(params.category || params.q || isFav);
   const showIntro = !filtering && !isBrowseAll && page === 1; // clean, image-first homepage
 
-  const [categories, featured, wotd, pageData, heroSetting] = await Promise.all([
+  const [categories, featured, wotd, pageData, heroSetting, testimonials] = await Promise.all([
     getCategories(),
     showIntro ? getFeatured(8, params.device) : Promise.resolve([]),
     showIntro ? getWallpaperOfTheDay(params.device) : Promise.resolve(null),
@@ -44,6 +44,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       sort: params.sort ?? "latest", q: params.q, page,
     }),
     showIntro ? getHeroSetting(params.device) : Promise.resolve(null),
+    showIntro ? getTestimonials() : Promise.resolve([]),
   ]);
   const { items: wallpapers, total } = pageData;
   const catName = params.category ? categories.find((c) => c.slug === params.category)?.name : undefined;
@@ -64,7 +65,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
 
           <ShareVision />
 
-          <Testimonials />
+          <Testimonials reviews={testimonials} />
 
           <section>
             <div className="mb-5 flex items-center justify-between">
