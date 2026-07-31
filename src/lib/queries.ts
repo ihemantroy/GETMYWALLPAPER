@@ -184,12 +184,12 @@ export async function getDailyForVibe(vibe?: string): Promise<Wallpaper | null> 
 
 export async function getHeroSetting(
   device?: string,
-): Promise<{ wallpaper: Wallpaper; focus: string } | null> {
+): Promise<{ wallpaper: Wallpaper; focus: string; fit: string } | null> {
   const dev = device && device !== "all" ? device : "desktop";
   const supabase = await createClient();
   const { data: setting } = await supabase
     .from("homepage_hero")
-    .select("wallpaper_id, focus")
+    .select("wallpaper_id, focus, fit")
     .eq("device", dev)
     .maybeSingle();
   if (!setting?.wallpaper_id) return null;
@@ -200,5 +200,9 @@ export async function getHeroSetting(
     .eq("status", "published")
     .maybeSingle();
   if (!w) return null;
-  return { wallpaper: w as Wallpaper, focus: (setting.focus as string) || "center" };
+  return {
+    wallpaper: w as Wallpaper,
+    focus: (setting.focus as string) || "center",
+    fit: (setting.fit as string) || "cover",
+  };
 }

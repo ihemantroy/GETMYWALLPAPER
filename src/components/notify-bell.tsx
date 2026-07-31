@@ -13,41 +13,60 @@ function urlBase64ToUint8Array(base64: string) {
   return arr;
 }
 
-type State = "idle" | "working" | "on" | "denied" | "unsupported";
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function isStandalone() {
+  return window.matchMedia?.("(display-mode: standalone)").matches
+    || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+}
+
+type State = "idle" | "working" | "on" | "denied";
 
 export function NotifyBell() {
   const [state, setState] = useState<State>("idle");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setState("unsupported");
-      return;
-    }
-    if (Notification.permission === "denied") { setState("denied"); return; }
-    navigator.serviceWorker.getRegistration().then((reg) => {
-      reg?.pushManager.getSubscription().then((sub) => {
-        if (sub) setState("on");
-      });
-    });
+    try {
+      if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      if (Notification.permission === "denied") { setState("denied"); return; }
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        reg?.pushManager.getSubscription().then((sub) => { if (sub) setState("on"); }).catch(() => {});
+      }).catch(() => {});
+    } catch { /* ignore */ }
   }, []);
 
   async function enable() {
     if (state === "on" || state === "working") return;
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) { setState("unsupported"); return; }
-    if (!window.isSecureContext) return;
+
+    // capability checks with clear guidance (so it never silently does nothing)
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      if (isIos() && !isStandalone()) {
+        alert("On iPhone, first add GetYourWallpaper to your Home Screen (Share → Add to Home Screen), then open it and tap the bell to turn on new-wallpaper alerts.");
+      } else {
+        alert("Your browser doesn't support notifications. Try Chrome on Android or desktop.");
+      }
+      return;
+    }
+    if (!window.isSecureContext) { alert("Notifications need a secure (https) connection."); return; }
+    if (Notification.permission === "denied") {
+      setState("denied");
+      alert("Notifications are blocked for this site. Enable them in your browser's site settings, then tap the bell again.");
+      return;
+    }
 
     setState("working");
     try {
       const perm = await Notification.requestPermission();
-      if (perm !== "granted") { setState(perm === "denied" ? "denied" : "idle"); return; }
+      if (perm !== "granted") {
+        setState(perm === "denied" ? "denied" : "idle");
+        if (perm === "denied") alert("You blocked notifications. You can re-enable them in your browser's site settings.");
+        return;
+      }
 
       let reg = await navigator.serviceWorker.getRegistration();
       if (!reg) reg = await navigator.serviceWorker.register("/sw.js");
-      const activeReg = await Promise.race([
-        navigator.serviceWorker.ready,
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("sw timeout")), 10000)),
-      ]);
+      const activeReg = await navigator.serviceWorker.ready;
 
       let sub = await activeReg.pushManager.getSubscription();
       if (!sub) {
@@ -63,15 +82,16 @@ export function NotifyBell() {
       });
       if (!res.ok) throw new Error("save failed");
       setState("on");
+      alert("Done! You'll get a notification whenever a new wallpaper drops. 🎉");
     } catch {
       setState("idle");
+      alert("Couldn't turn on notifications just now — please try again.");
     }
   }
 
   const title =
-    state === "on" ? "Notifications on — you'll be alerted on new wallpapers"
-    : state === "denied" ? "Notifications blocked in your browser settings"
-    : state === "unsupported" ? "Notifications not supported on this device"
+    state === "on" ? "Notifications on"
+    : state === "denied" ? "Notifications blocked — enable in browser settings"
     : "Turn on new-wallpaper notifications";
 
   return (

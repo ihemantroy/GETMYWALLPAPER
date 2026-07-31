@@ -11,11 +11,11 @@ export default async function AdminHero() {
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(500);
-  const { data: settings } = await admin.from("homepage_hero").select("device, wallpaper_id, focus");
+  const { data: settings } = await admin.from("homepage_hero").select("device, wallpaper_id, focus, fit");
 
-  const current: Record<string, { wallpaper_id: string | null; focus: string }> = {};
-  (settings ?? []).forEach((s: { device: string; wallpaper_id: string | null; focus: string }) => {
-    current[s.device] = { wallpaper_id: s.wallpaper_id, focus: s.focus };
+  const current: Record<string, { wallpaper_id: string | null; focus: string; fit: string }> = {};
+  (settings ?? []).forEach((s: { device: string; wallpaper_id: string | null; focus: string; fit: string }) => {
+    current[s.device] = { wallpaper_id: s.wallpaper_id, focus: s.focus, fit: s.fit };
   });
 
   return (

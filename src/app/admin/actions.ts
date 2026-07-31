@@ -157,13 +157,14 @@ export async function deleteCategory(id: string) {
   revalidatePath("/");
 }
 
-export async function setHero(device: string, wallpaperId: string, focus: string) {
+export async function setHero(device: string, wallpaperId: string, focus: string, fit: string) {
   await assertAdmin();
   const admin = createAdminClient();
   await admin.from("homepage_hero").upsert({
     device,
     wallpaper_id: wallpaperId || null,
     focus: focus || "center",
+    fit: fit || "cover",
     updated_at: new Date().toISOString(),
   });
   revalidatePath("/");

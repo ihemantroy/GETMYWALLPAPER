@@ -9,6 +9,7 @@ import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { HeroHome } from "@/components/hero-home";
 import { ShareVision } from "@/components/share-vision";
+import { Testimonials } from "@/components/testimonials";
 import { DeviceSwitcher } from "@/components/device-switcher";
 import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
@@ -59,9 +60,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         /* ---------- CLEAN HOMEPAGE ---------- */
         <div className="space-y-16">
           <Suspense fallback={null}><DeviceSwitcher /></Suspense>
-          <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} heroOverride={heroSetting?.wallpaper ?? null} heroFocus={heroSetting?.focus} />
+          <HeroHome wotd={wotd} featured={showcase} categories={categories} total={total} downloads={downloads} device={params.device} heroOverride={heroSetting?.wallpaper ?? null} heroFocus={heroSetting?.focus} heroFit={heroSetting?.fit} />
 
           <ShareVision />
+
+          <Testimonials />
 
           <section>
             <div className="mb-5 flex items-center justify-between">

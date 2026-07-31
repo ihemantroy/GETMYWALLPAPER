@@ -17,7 +17,7 @@ export function HeroManager({
   current,
 }: {
   wallpapers: W[];
-  current: Record<string, { wallpaper_id: string | null; focus: string }>;
+  current: Record<string, { wallpaper_id: string | null; focus: string; fit: string }>;
 }) {
   return (
     <div className="mt-6 space-y-5">
@@ -37,10 +37,11 @@ function DeviceHero({
   device: string;
   label: string;
   wallpapers: W[];
-  initial?: { wallpaper_id: string | null; focus: string };
+  initial?: { wallpaper_id: string | null; focus: string; fit: string };
 }) {
   const [wid, setWid] = useState(initial?.wallpaper_id ?? "");
   const [focus, setFocus] = useState(initial?.focus ?? "center");
+  const [fit, setFit] = useState(initial?.fit ?? "cover");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const selected = wallpapers.find((w) => w.id === wid);
@@ -49,7 +50,7 @@ function DeviceHero({
     setSaving(true);
     setSaved(false);
     try {
-      await setHero(device, wid, focus);
+      await setHero(device, wid, focus, fit);
       setSaved(true);
     } finally {
       setSaving(false);
@@ -88,6 +89,21 @@ function DeviceHero({
             ))}
           </div>
 
+          <label className="block pt-1 text-xs uppercase tracking-widest text-chalk-faint">Fit</label>
+          <div className="flex gap-2">
+            {(["cover", "contain"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => { setFit(f); setSaved(false); }}
+                className={`focusable rounded-pill px-4 py-1.5 text-xs font-medium transition ${
+                  fit === f ? "btn-accent" : "surface text-chalk-muted hover:text-chalk"
+                }`}
+              >
+                {f === "cover" ? "Fill (crop to edges)" : "Whole image (no crop)"}
+              </button>
+            ))}
+          </div>
+
           <button
             onClick={save}
             disabled={saving}
@@ -103,7 +119,7 @@ function DeviceHero({
             <img
               src={renderUrl(selected.storage_path, { width: 520, quality: 82 })}
               alt=""
-              className="h-full w-full object-cover"
+              className={fit === "contain" ? "h-full w-full object-contain" : "h-full w-full object-cover"}
               style={{ objectPosition: `center ${focus}` }}
             />
           ) : (

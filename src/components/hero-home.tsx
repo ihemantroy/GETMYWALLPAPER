@@ -31,7 +31,7 @@ function quality(w: number) {
 }
 
 export function HeroHome({
-  wotd, featured, categories, total, downloads, device, heroOverride, heroFocus,
+  wotd, featured, categories, total, downloads, device, heroOverride, heroFocus, heroFit,
 }: {
   wotd: Wallpaper | null;
   featured: Wallpaper[];
@@ -41,6 +41,7 @@ export function HeroHome({
   device?: string;
   heroOverride?: Wallpaper | null;
   heroFocus?: string;
+  heroFit?: string;
 }) {
   const nameById = new Map(categories.map((c) => [c.id, c.name]));
   const landscape = device !== "phone" && device !== "tablet";
@@ -49,6 +50,9 @@ export function HeroHome({
   // admin-chosen hero wins; otherwise prefer a landscape image so it never zoom-crops
   const hero = heroOverride ?? featured.find(isLand) ?? wotd ?? featured[0] ?? null;
   const heroPos = `center ${heroFocus ?? "center"}`;
+  // the hero card itself is landscape on desktop, portrait on phone — so the chosen image shows in its true shape
+  const heroAspect = landscape ? "aspect-[16/10]" : "aspect-[3/4]";
+  const heroFitClass = heroFit === "contain" ? "object-contain" : "object-cover";
   // on desktop show only landscape wallpapers; on phone only portrait — fall back if none
   const pool = landscape ? featured.filter(isLand) : featured.filter((w) => !isLand(w));
   const deck = pool.length ? pool : featured;
@@ -101,12 +105,12 @@ export function HeroHome({
         {hero && (
           <div className="animate-fade-up relative overflow-hidden rounded-3xl border border-white/[0.08]" style={{ animationDelay: "0.1s" }}>
             <Link href={`/wallpaper/${hero.slug}`} className="block">
-              <div className="relative aspect-[16/10]">
+              <div className={`relative ${heroAspect}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={renderUrl(hero.storage_path, { width: 1400, quality: 88 })}
                   alt={hero.title}
-                  className="h-full w-full object-cover"
+                  className={`h-full w-full ${heroFitClass}`}
                   style={{ backgroundColor: hero.dominant_color ?? "#0b0b12", objectPosition: heroPos }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
