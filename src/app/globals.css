@@ -250,7 +250,7 @@ button:active, [role="button"]:active, a.btn-accent:active {
 .marquee-x { display: flex; width: max-content; animation: marquee-x 40s linear infinite; }
 .marquee-x:hover { animation-play-state: paused; }
 @keyframes marquee-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .marquee-x { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .marquee-x { animation-duration: 60s; } }
 
 /* mouse-glow spotlight for premium cards (set --mx/--my via JS) */
 .glow-card { position: relative; }

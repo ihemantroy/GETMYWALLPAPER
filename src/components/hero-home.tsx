@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Sparkles, Flame, Download, ChevronRight, ChevronLeft, Upload, Compass,
+  Sparkles, Flame, Download, ChevronRight, Upload, Compass,
   Image as ImageIcon, Users, Layers, Zap, Car, Rocket, Gamepad2, Moon, Palette, Ghost, Mountain, Building2, Flower2, Grid3x3,
 } from "lucide-react";
 import type { Wallpaper, Category } from "@/lib/types";
@@ -52,7 +52,6 @@ export function HeroHome({
   // on desktop show only landscape wallpapers; on phone only portrait — fall back if none
   const pool = landscape ? featured.filter(isLand) : featured.filter((w) => !isLand(w));
   const deck = pool.length ? pool : featured;
-  const thumbs = deck.slice(0, 3);
   const trending = deck;
 
   const stats = [
@@ -114,20 +113,6 @@ export function HeroHome({
                 {hero.credit && <p className="text-sm text-white/70">by {hero.credit}</p>}
               </div>
             </Link>
-            {thumbs.length > 1 && (
-              <div className="absolute bottom-4 right-4 hidden items-center gap-2 sm:flex">
-                {thumbs.map((t) => (
-                  <Link key={t.id} href={`/wallpaper/${t.slug}`} className="h-11 w-16 overflow-hidden rounded-lg ring-1 ring-white/20 transition hover:ring-white/50">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={renderUrl(t.storage_path, { width: 160, quality: 70 })} alt="" className="h-full w-full object-cover" />
-                  </Link>
-                ))}
-                <div className="ml-1 flex gap-1">
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white backdrop-blur"><ChevronLeft size={15} /></span>
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white backdrop-blur"><ChevronRight size={15} /></span>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </section>
