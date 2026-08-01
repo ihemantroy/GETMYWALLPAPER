@@ -4,6 +4,7 @@ import { getCategories, getWallpapersPage, PER_PAGE } from "@/lib/queries";
 import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { Pagination } from "@/components/pagination";
 import { DEVICES, COLOR_BUCKETS, VIBES, KEYWORD_TOPICS, SITE } from "@/lib/constants";
+import { CATEGORY_COPY } from "@/lib/category-copy";
 
 export const revalidate = 600;
 
@@ -16,6 +17,7 @@ type Resolved = {
   query: { device?: string; color?: string; category?: string; q?: string };
   device?: string;
   kind: TopicKind;
+  dbDescription?: string | null;
 };
 
 async function resolve(topic: string): Promise<Resolved | null> {
@@ -29,7 +31,7 @@ async function resolve(topic: string): Promise<Resolved | null> {
 
   const cats = await getCategories();
   const cat = cats.find((c) => c.slug === t);
-  if (cat) return { label: cat.name, query: { category: cat.slug }, kind: "category" };
+  if (cat) return { label: cat.name, query: { category: cat.slug }, kind: "category", dbDescription: cat.description };
 
   const vibe = VIBES.find((v) => v.slug === t);
   if (vibe) return { label: vibe.label, query: { q: vibe.slug }, kind: "vibe" };
@@ -43,10 +45,26 @@ async function resolve(topic: string): Promise<Resolved | null> {
 // Per-kind copy so landing pages read as genuinely different write-ups rather
 // than one template with the label swapped in — this is what separates a
 // useful collection page from thin/duplicate content in Google's eyes.
-function topicCopy(r: Resolved) {
+function topicCopy(r: Resolved, slug: string) {
   const label = r.label;
   const lower = label.toLowerCase();
 
+  const generic = topicCopyGeneric(r, label, lower);
+  const override = CATEGORY_COPY[slug.toLowerCase()];
+
+  // Priority: description written in the admin panel > hand-written copy
+  // shipped in code > generic per-kind template. This is what makes the
+  // admin "Add description" field actually take effect on the live page.
+  if (r.dbDescription && r.dbDescription.trim()) {
+    return { intro: r.dbDescription.trim(), body: override?.body ?? generic.body, faq: generic.faq };
+  }
+  if (override) {
+    return { intro: override.intro, body: override.body ?? generic.body, faq: generic.faq };
+  }
+  return generic;
+}
+
+function topicCopyGeneric(r: Resolved, label: string, lower: string) {
   switch (r.kind) {
     case "device":
       return {
@@ -143,7 +161,7 @@ export default async function TopicPage({
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const copy = topicCopy(r);
+  const copy = topicCopy(r, topic);
 
   const faqJsonLd = {
     "@context": "https://schema.org",

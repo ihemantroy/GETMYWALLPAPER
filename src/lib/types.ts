@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   slug: string;
   name: string;
+  description?: string | null;
   sort_order: number;
   count?: number;
 }

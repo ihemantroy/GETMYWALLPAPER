@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Pencil, X, Loader2 } from "lucide-react";
+import { Pencil, X, Loader2, ExternalLink } from "lucide-react";
 import { updateWallpaper } from "@/app/admin/actions";
+import { renderUrl } from "@/lib/supabase/storage";
 import { DEVICES } from "@/lib/constants";
 import type { Category, Wallpaper } from "@/lib/types";
 
@@ -12,6 +14,8 @@ export function WallpaperEditor({ w, categories }: { w: Wallpaper; categories: C
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(w.title);
+  const [description, setDescription] = useState(w.description ?? "");
+  const [altText, setAltText] = useState(w.alt_text ?? "");
   const [categoryId, setCategoryId] = useState(w.category_id ?? "");
   const [devices, setDevices] = useState<string[]>(
     w.devices && w.devices.length ? w.devices : [w.device].filter(Boolean),
@@ -27,6 +31,8 @@ export function WallpaperEditor({ w, categories }: { w: Wallpaper; categories: C
     start(async () => {
       await updateWallpaper(w.id, {
         title,
+        description,
+        alt_text: altText,
         category_id: categoryId || null,
         devices: devices.length ? devices : ["desktop"],
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
@@ -49,9 +55,9 @@ export function WallpaperEditor({ w, categories }: { w: Wallpaper; categories: C
       </button>
 
       {open && mounted && createPortal(
-        <div className="fixed inset-0 z-[9999] grid place-items-center bg-black/70 p-4" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[9999] grid place-items-center overflow-y-auto bg-black/70 p-4" onClick={() => setOpen(false)}>
           <div
-            className="glass-strong w-full max-w-md rounded-card p-6"
+            className="glass-strong my-8 w-full max-w-2xl rounded-card p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -59,10 +65,42 @@ export function WallpaperEditor({ w, categories }: { w: Wallpaper; categories: C
               <button onClick={() => setOpen(false)} className="text-chalk-muted hover:text-chalk"><X size={18} /></button>
             </div>
 
+            <a
+              href={renderUrl(w.storage_path, { width: 1600 })}
+              target="_blank"
+              rel="noreferrer"
+              className="group relative mb-5 block h-72 w-full overflow-hidden rounded-card bg-black/20"
+            >
+              <Image
+                src={renderUrl(w.storage_path, { width: 900 })}
+                alt={w.alt_text || w.title}
+                fill
+                sizes="600px"
+                className="object-contain"
+              />
+              <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-pill bg-black/60 px-3 py-1.5 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100">
+                <ExternalLink size={13} /> View full size
+              </span>
+            </a>
+
             <label className="mb-3 block">
               <span className="mb-1.5 block text-xs uppercase tracking-widest text-chalk-faint">Title</span>
               <input value={title} onChange={(e) => setTitle(e.target.value)}
                 className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk" />
+            </label>
+
+            <label className="mb-3 block">
+              <span className="mb-1.5 block text-xs uppercase tracking-widest text-chalk-faint">Description</span>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+                placeholder="Shown on the wallpaper's own page — a sentence or two about the shot, style, or subject."
+                className="focusable surface w-full rounded-card px-4 py-3 text-sm text-chalk placeholder:text-chalk-faint" />
+            </label>
+
+            <label className="mb-3 block">
+              <span className="mb-1.5 block text-xs uppercase tracking-widest text-chalk-faint">Alt text</span>
+              <input value={altText} onChange={(e) => setAltText(e.target.value)}
+                placeholder="Describe what's in the image, for accessibility and image search"
+                className="focusable surface h-11 w-full rounded-pill px-4 text-sm text-chalk placeholder:text-chalk-faint" />
             </label>
 
             <label className="mb-3 block">

@@ -23,28 +23,39 @@ export default async function AdminWallpapers() {
   const categories = (cats ?? []) as Category[];
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <h1 className="font-display text-3xl font-bold">Wallpapers</h1>
       <p className="mt-1 text-sm text-chalk-muted">Manage your published and scheduled catalog.</p>
 
-      <div className="mt-8 space-y-2">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.length === 0 ? (
           <EmptyState title="Nothing published" body="Upload wallpapers to see them here." cta={{ href: "/admin/upload", label: "Upload" }} />
         ) : (
           items.map((w) => (
-            <GlassCard key={w.id} interactive={false} className="flex items-center gap-4 p-3">
-              <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
-                <Image src={renderUrl(w.storage_path, { width: 200 })} alt={w.title} fill sizes="80px" className="object-cover" />
+            <GlassCard key={w.id} interactive={false} className="overflow-hidden p-0">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/20">
+                <Image
+                  src={renderUrl(w.storage_path, { width: 500 })}
+                  alt={w.alt_text || w.title}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
+                />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{w.title}</p>
-                <p className="text-xs text-chalk-faint">
-                  {w.status === "scheduled" ? "Scheduled" : "Published"} · {formatCount(w.download_count)} downloads · {(w.devices && w.devices.length ? w.devices : [w.device]).join(", ")}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <WallpaperEditor w={w} categories={categories} />
-                <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} wotd={w.is_wotd} />
+              <div className="flex items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{w.title}</p>
+                  <p className="truncate text-xs text-chalk-faint">
+                    {w.status === "scheduled" ? "Scheduled" : "Published"} · {formatCount(w.download_count)} downloads
+                  </p>
+                  <p className="truncate text-xs text-chalk-faint">
+                    {(w.devices && w.devices.length ? w.devices : [w.device]).join(", ")}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <WallpaperEditor w={w} categories={categories} />
+                  <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} wotd={w.is_wotd} />
+                </div>
               </div>
             </GlassCard>
           ))

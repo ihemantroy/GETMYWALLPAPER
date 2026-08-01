@@ -75,12 +75,23 @@ export async function createWallpaper(input: {
 
 export async function updateWallpaper(
   id: string,
-  input: { title?: string; category_id?: string | null; devices?: string[]; tags?: string[]; credit?: string | null; credit_url?: string | null },
+  input: {
+    title?: string;
+    description?: string | null;
+    alt_text?: string | null;
+    category_id?: string | null;
+    devices?: string[];
+    tags?: string[];
+    credit?: string | null;
+    credit_url?: string | null;
+  },
 ) {
   await assertAdmin();
   const admin = createAdminClient();
   const patch: Record<string, unknown> = {};
   if (typeof input.title === "string" && input.title.trim()) patch.title = input.title.trim();
+  if (input.description !== undefined) patch.description = input.description?.trim() || null;
+  if (input.alt_text !== undefined) patch.alt_text = input.alt_text?.trim() || null;
   if (input.category_id !== undefined) patch.category_id = input.category_id || null;
   if (input.devices && input.devices.length) {
     patch.devices = input.devices;
@@ -172,5 +183,20 @@ export async function deleteCategory(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/categories");
   revalidatePath("/");
+}
+
+export async function updateCategoryDescription(id: string, description: string) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  const clean = description.trim();
+  const { error } = await admin
+    .from("categories")
+    .update({ description: clean.length ? clean : null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/categories");
+  // Revalidate the public collection page so the new copy shows immediately.
+  const { data: cat } = await admin.from("categories").select("slug").eq("id", id).maybeSingle();
+  if (cat?.slug) revalidatePath(`/wallpapers/${cat.slug}`);
 }
 
