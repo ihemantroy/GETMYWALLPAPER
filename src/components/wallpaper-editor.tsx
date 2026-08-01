@@ -136,7 +136,7 @@ export function WallpaperEditor({ w }: { w: Wallpaper }) {
             height={dh}
             onLoad={(e) => { setNat({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight }); setLoaded(true); }}
             onError={() => setLoaded(true)}
-            className={`block h-auto max-h-[58vh] w-auto max-w-[760px] rounded-lg object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={`block h-auto w-auto max-w-full rounded-lg object-contain transition-opacity duration-300 sm:max-h-[58vh] sm:max-w-[760px] ${loaded ? "opacity-100" : "opacity-0"}`}
             style={{ backgroundColor: w.dominant_color ?? "rgb(var(--ink-3))" }}
           />
         </div>
