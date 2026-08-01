@@ -7,6 +7,7 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoriteButton } from "@/components/favorite-button";
 import { ShareButton } from "@/components/share-button";
 import { DownloadButton } from "@/components/download-button";
+import { WallpaperImage } from "@/components/wallpaper-image";
 import { AdSlot } from "@/components/ad-slot";
 import { renderUrl, publicUrl } from "@/lib/supabase/storage";
 import { formatCount } from "@/lib/utils";
@@ -31,10 +32,6 @@ export async function generateMetadata({
   };
 }
 
-function quality(px: number) {
-  return px >= 7000 ? "8K" : px >= 3840 ? "4K" : px >= 2560 ? "2K" : "HD";
-}
-
 export default async function WallpaperPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const w = await getWallpaperBySlug(slug);
@@ -42,7 +39,6 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
   const related = await getRelated(w);
 
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
-  const preview = renderUrl(w.storage_path, { width: 1600, quality: 92 });
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -99,24 +95,12 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
         </div>
       </div>
 
-      {/* the image — big, centered, flat */}
-      <div className="surface relative overflow-hidden rounded-card p-2 sm:p-4">
-        <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full glass-strong px-3 py-1 text-xs font-semibold text-chalk">
-          {quality(Math.max(w.width, w.height))} · {w.width}×{w.height}
-        </span>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={preview}
-          alt={w.title}
-          className="mx-auto max-h-[74vh] w-auto max-w-full rounded-lg object-contain"
-          style={{ backgroundColor: w.dominant_color ?? "rgb(var(--ink-3))" }}
-        />
-      </div>
+      {/* the image — big, centered, flat. Badge reads the real rendered size */}
+      <WallpaperImage w={w} />
 
       {/* meta line */}
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-chalk-muted">
         <span className="inline-flex items-center gap-1.5"><Download size={14} /> {formatCount(w.download_count)} downloads</span>
-        <span className="capitalize">For {w.device}</span>
         {w.credit && (
           <span>
             Credit:{" "}

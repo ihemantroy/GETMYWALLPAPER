@@ -30,11 +30,13 @@ export function Footer() {
 
         <FooterCol title="Company">
           <FooterLink href="/about">About</FooterLink>
+          <FooterLink href="/faq">FAQ</FooterLink>
           <FooterLink href="/contact">Contact</FooterLink>
         </FooterCol>
 
         <FooterCol title="Legal">
           <FooterLink href="/privacy">Privacy Policy</FooterLink>
+          <FooterLink href="/cookies">Cookie Policy</FooterLink>
           <FooterLink href="/terms">Terms</FooterLink>
           <FooterLink href="/disclaimer">Disclaimer</FooterLink>
           <FooterLink href="/dmca">DMCA</FooterLink>

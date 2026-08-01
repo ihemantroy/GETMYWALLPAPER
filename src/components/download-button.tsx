@@ -17,6 +17,7 @@ export function DownloadButton({ w }: { w: Wallpaper }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [myScreen, setMyScreen] = useState<Res | null>(null);
+  const [natRatio, setNatRatio] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,6 +27,14 @@ export function DownloadButton({ w }: { w: Wallpaper }) {
     if (sw && sh) setMyScreen({ label: "Your screen", w: sw, h: sh, mine: true });
   }, []);
 
+  // Read the real (rendered) aspect ratio so presets match what's on screen,
+  // even when the stored width/height are wrong (EXIF rotation / swapped).
+  useEffect(() => {
+    const img = new window.Image();
+    img.onload = () => { if (img.naturalWidth && img.naturalHeight) setNatRatio(img.naturalWidth / img.naturalHeight); };
+    img.src = publicUrl(w.storage_path);
+  }, [w.storage_path]);
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -34,17 +43,26 @@ export function DownloadButton({ w }: { w: Wallpaper }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const portrait = w.height >= w.width;
+  const portrait = natRatio != null ? natRatio < 1 : w.height >= w.width;
   const presets = RESOLUTIONS[portrait ? "phone" : "desktop"] ?? [];
 
+  // Corrected "original" dimensions, matching the true orientation.
+  const storedLong = Math.max(w.width, w.height) || 0;
+  const orig = (() => {
+    if (natRatio == null || !storedLong) return { w: w.width, h: w.height };
+    return natRatio >= 1
+      ? { w: storedLong, h: Math.round(storedLong / natRatio) }
+      : { w: Math.round(storedLong * natRatio), h: storedLong };
+  })();
+
   const options: Res[] = useMemo(() => {
-    const list: Res[] = [{ label: "Original", w: w.width, h: w.height, original: true }];
+    const list: Res[] = [{ label: "Original", w: orig.w, h: orig.h, original: true }];
     if (myScreen) {
       const screenPortrait = myScreen.h > myScreen.w;
       if (screenPortrait === portrait) list.push(myScreen);
     }
     return [...list, ...presets];
-  }, [myScreen, presets, portrait, w.width, w.height]);
+  }, [myScreen, presets, portrait, orig.w, orig.h]);
 
   async function download(r: Res) {
     setBusy(r.label);
@@ -53,7 +71,7 @@ export function DownloadButton({ w }: { w: Wallpaper }) {
       await fetch(`/api/download/${w.id}`, { method: "POST" }).catch(() => {});
       window.dispatchEvent(new Event("wallpaper-downloaded"));
       const filename = r.original
-        ? `${w.slug}-${w.width}x${w.height}.jpg`
+        ? `${w.slug}-${orig.w}x${orig.h}.jpg`
         : `${w.slug}-${r.w}x${r.h}.jpg`;
       const src = r.original
         ? publicUrl(w.storage_path)

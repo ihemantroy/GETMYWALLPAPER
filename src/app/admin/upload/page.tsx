@@ -18,7 +18,17 @@ type Item = {
   message?: string;
 };
 
-function readDimensions(file: File): Promise<{ w: number; h: number }> {
+async function readDimensions(file: File): Promise<{ w: number; h: number }> {
+  // createImageBitmap with imageOrientation:"from-image" applies EXIF rotation,
+  // so we store the dimensions as the image is actually displayed.
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const dims = { w: bmp.width, h: bmp.height };
+    bmp.close?.();
+    if (dims.w && dims.h) return dims;
+  } catch {
+    /* fall through to <img> */
+  }
   return new Promise((resolve) => {
     const img = new window.Image();
     img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });

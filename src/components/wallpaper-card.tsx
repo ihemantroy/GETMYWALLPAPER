@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Flame, Sparkles, Download } from "lucide-react";
+import { Flame, Sparkles, Download, Link2, Check } from "lucide-react";
 import type { Wallpaper } from "@/lib/types";
-import { renderUrl } from "@/lib/supabase/storage";
+import { renderUrl, publicUrl } from "@/lib/supabase/storage";
 import { FavoriteButton } from "@/components/favorite-button";
 
 function isNew(w: Wallpaper) {
@@ -21,11 +21,41 @@ export function WallpaperCard({
   w, categoryName, priority = false,
 }: { w: Wallpaper; categoryName?: string; priority?: boolean; device?: string }) {
   const [loaded, setLoaded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     if (imgRef.current?.complete) setLoaded(true);
   }, []);
+
+  async function quickDownload(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    fetch(`/api/download/${w.id}`, { method: "POST" }).catch(() => {});
+    try {
+      const res = await fetch(publicUrl(w.storage_path));
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${w.slug}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch {
+      window.open(publicUrl(w.storage_path), "_blank");
+    }
+  }
+
+  function copyLink(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/wallpaper/${w.slug}`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
 
   const hot = (w.download_count ?? 0) >= 20;
   const fresh = isNew(w);
@@ -81,8 +111,24 @@ export function WallpaperCard({
         </div>
       </Link>
 
-      {/* favorite */}
-      <div className="absolute right-2.5 top-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      {/* quick actions — Magnific-style hover cluster */}
+      <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <button
+          onClick={quickDownload}
+          aria-label="Download"
+          title="Download"
+          className="focusable grid h-8 w-8 place-items-center rounded-full glass-strong text-chalk transition hover:bg-ink-3"
+        >
+          <Download size={15} />
+        </button>
+        <button
+          onClick={copyLink}
+          aria-label="Copy link"
+          title="Copy link"
+          className="focusable grid h-8 w-8 place-items-center rounded-full glass-strong text-chalk transition hover:bg-ink-3"
+        >
+          {copied ? <Check size={15} className="text-green-400" /> : <Link2 size={15} />}
+        </button>
         <FavoriteButton id={w.id} />
       </div>
     </article>

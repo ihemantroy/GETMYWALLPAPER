@@ -4,6 +4,7 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoritesView } from "@/components/favorites-view";
 import { Pagination } from "@/components/pagination";
 import { BrowseBar } from "@/components/browse-bar";
+import { PopularTags } from "@/components/popular-tags";
 import { DeviceWelcome } from "@/components/device-welcome";
 import { AdSlot } from "@/components/ad-slot";
 
@@ -63,6 +64,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
         <p className="mt-2 text-sm text-chalk-muted sm:text-base">{sub}</p>
       </header>
+
+      {/* ---------- POPULAR CHIPS (default view only) ---------- */}
+      {!isFav && !params.q && !catName && !params.device && <PopularTags />}
 
       {/* ---------- FILTER BAR ---------- */}
       {!isFav && (

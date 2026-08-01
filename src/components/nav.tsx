@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, Sparkles } from "lucide-react";
 import { NotifyBell } from "@/components/notify-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -75,6 +75,13 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
             )}
           </nav>
 
+          <Link
+            href="/create"
+            className="focusable mr-1 hidden h-10 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-sm font-semibold text-accent transition hover:bg-accent/20 sm:inline-flex"
+          >
+            <Sparkles size={15} /> Create
+          </Link>
+
           <ThemeToggle />
           <NotifyBell />
 
@@ -114,6 +121,9 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
                 className="focusable h-11 w-full rounded-full border border-line bg-ink-2 pl-11 pr-3 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
               />
             </form>
+            <Link href="/create" onClick={() => setOpen(false)} className="mx-2 mb-1 flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">
+              <Sparkles size={16} /> Create a wallpaper
+            </Link>
             {LINKS.map((l) => (
               <Link key={l.label} href={l.href} onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-sm text-chalk-muted transition hover:bg-ink-3 hover:text-chalk">
                 {l.label}
