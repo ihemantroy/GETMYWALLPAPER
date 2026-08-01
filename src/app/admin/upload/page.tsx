@@ -20,6 +20,7 @@ type Item = {
   altText?: string;
   aiTags?: string;
   aiState?: "idle" | "loading" | "done" | "error";
+  aiError?: string;
 };
 
 async function readDimensions(file: File): Promise<{ w: number; h: number }> {
@@ -85,7 +86,7 @@ export default function AdminUploadPage() {
 
   /** AI auto-fill: sends the raw file to Gemini and fills title/description/alt/tags. */
   async function autoFill(i: number) {
-    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "loading" } : it)));
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "loading", aiError: undefined } : it)));
     try {
       const form = new FormData();
       form.append("file", items[i].file);
@@ -106,8 +107,9 @@ export default function AdminUploadPage() {
             : it,
         ),
       );
-    } catch {
-      setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "error" } : it)));
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "AI description failed";
+      setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "error", aiError: message } : it)));
     }
   }
 
@@ -304,7 +306,9 @@ export default function AdminUploadPage() {
                   </button>
                 )}
               </div>
-              {it.aiState === "error" && <p className="pl-9 text-xs text-accent-2">AI fill failed — check GEMINI_API_KEY.</p>}
+              {it.aiState === "error" && (
+                <p className="pl-9 text-xs text-accent-2">AI fill failed — {it.aiError || "check GEMINI_API_KEY."}</p>
+              )}
               {(it.description !== undefined || it.aiState === "done") && (
                 <div className="pl-9">
                   <textarea

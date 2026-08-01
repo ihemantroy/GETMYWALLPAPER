@@ -11,7 +11,10 @@
  *                        function size/time small).
  */
 
-const GEMINI_MODEL = "gemini-1.5-flash";
+// "gemini-flash-latest" is a Google-maintained alias that always points to
+// their current recommended Flash model, so this won't silently break again
+// the next time a pinned model version gets retired.
+const GEMINI_MODEL = "gemini-flash-latest";
 const JINA_EMBED_URL = "https://api.jina.ai/v1/embeddings";
 const JINA_MODEL = "jina-clip-v2";
 

@@ -15,16 +15,33 @@ export default function AdminAiPage() {
     setRunning(true);
     setError(null);
     setProcessed(0);
+    const MAX_CONSECUTIVE_EMPTY_BATCHES = 5;
+    let consecutiveEmptyBatches = 0;
     try {
       let left = Infinity;
       while (left > 0) {
         const res = await fetch("/api/admin/backfill-embeddings", { method: "POST" });
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Backfill failed");
-        setProcessed((p) => p + json.processed);
+        if (!res.ok && !json.remaining) throw new Error(json.error || "Backfill failed");
+        setProcessed((p) => p + (json.processed || 0));
         setRemaining(json.remaining);
         left = json.remaining;
-        if (json.processed === 0 && json.remaining > 0) break; // avoid infinite loop on persistent failures
+
+        if (json.processed === 0 && json.remaining > 0) {
+          // A whole batch failed even after the server's own retries (e.g. a
+          // sustained rate limit). Don't give up immediately — pause and let
+          // the rate limit window reset, then try again a few times before
+          // surfacing an error.
+          consecutiveEmptyBatches++;
+          if (consecutiveEmptyBatches > MAX_CONSECUTIVE_EMPTY_BATCHES) {
+            throw new Error(
+              json.error || json.lastError || "Repeated failures — stopped after several retries. See error above."
+            );
+          }
+          await new Promise((r) => setTimeout(r, 15000));
+        } else {
+          consecutiveEmptyBatches = 0;
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Backfill failed");
