@@ -115,7 +115,11 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
         )}
       </div>
 
-      {w.description && <p className="mt-3 max-w-2xl text-sm text-chalk-muted">{w.description}</p>}
+      <p className="mt-3 max-w-2xl text-sm text-chalk-muted">
+        {w.description
+          ?? w.alt_text
+          ?? `${w.title} — a free ${w.device ?? ""} wallpaper${w.width && w.height ? ` available up to ${w.width}×${w.height}` : ""}, ready to download and set as your background.`}
+      </p>
 
       {/* tags */}
       {w.tags && w.tags.length > 0 && (
