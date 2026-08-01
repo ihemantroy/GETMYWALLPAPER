@@ -3,7 +3,7 @@ export const SITE = {
   domain: "getyourwallpaper.com",
   tagline: "Wallpapers with taste.",
   description:
-    "A hand-picked home for the internet's most beautiful wallpapers. Every screen, every vibe — no clutter.",
+    "A hand-picked home for the internet’s most beautiful wallpapers. Every screen, every vibe — no clutter.",
 };
 
 // Device filters (the pill row + per-device download sizes).
