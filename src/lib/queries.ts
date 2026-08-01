@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Wallpaper, Category } from "@/lib/types";
 import { colorBucket } from "@/lib/utils";
+import { embedText } from "@/lib/ai";
 
 type BrowseParams = {
   device?: string;
@@ -8,9 +9,56 @@ type BrowseParams = {
   q?: string;
   color?: string;      // colour family slug (see COLOR_BUCKETS)
   sort?: "latest" | "popular";
+  mode?: "keyword" | "vibe"; // "vibe" = AI natural-language / semantic search
   limit?: number;
   offset?: number;
 };
+
+/** Re-order a set of published wallpapers to match an ordered list of ids from a vector search. */
+async function hydrateByIds(ids: string[]): Promise<Wallpaper[]> {
+  if (ids.length === 0) return [];
+  const supabase = await createClient();
+  const { data } = await supabase.from("wallpapers").select("*").in("id", ids).eq("status", "published");
+  const byId = new Map((data ?? []).map((w) => [w.id, w as Wallpaper]));
+  return ids.map((id) => byId.get(id)).filter((w): w is Wallpaper => Boolean(w));
+}
+
+/** Feature 3: AI natural-language / semantic search ("cozy autumn", "dark minimal blue"). */
+export async function semanticSearch(query: string, limit = PER_PAGE): Promise<Wallpaper[]> {
+  try {
+    const vector = await embedText(query);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("match_wallpapers", {
+      query_embedding: vector,
+      match_count: limit,
+    });
+    if (error) throw new Error(error.message);
+    const ids = (data ?? []).map((r: { id: string }) => r.id);
+    return hydrateByIds(ids);
+  } catch (e) {
+    console.error("semanticSearch failed, falling back to keyword search", e instanceof Error ? e.message : e);
+    const { items } = await getWallpapersPage({ q: query, mode: "keyword", limit });
+    return items;
+  }
+}
+
+/** Feature 4: "Find similar" — nearest neighbours of a wallpaper's own embedding. */
+export async function getSimilarByEmbedding(w: Wallpaper, limit = 6): Promise<Wallpaper[]> {
+  const supabase = await createClient();
+  const { data: row } = await supabase.from("wallpapers").select("embedding").eq("id", w.id).maybeSingle();
+  if (!row?.embedding) return [];
+  const { data, error } = await supabase.rpc("match_wallpapers", {
+    query_embedding: row.embedding,
+    match_count: limit,
+    exclude_id: w.id,
+  });
+  if (error) {
+    console.error("getSimilarByEmbedding", error.message);
+    return [];
+  }
+  const ids = (data ?? []).map((r: { id: string }) => r.id);
+  return hydrateByIds(ids);
+}
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
@@ -53,7 +101,14 @@ export async function getWallpapersPage(
   params: BrowseParams & { page?: number } = {},
 ): Promise<{ items: Wallpaper[]; total: number }> {
   const supabase = await createClient();
-  const { device, category, q, color, sort = "latest", page = 1, limit = PER_PAGE } = params;
+  const { device, category, q, color, sort = "latest", mode = "keyword", page = 1, limit = PER_PAGE } = params;
+
+  // Feature 3: AI natural-language / semantic search takes a separate path —
+  // it ranks by vector similarity rather than a normal filtered query.
+  if (mode === "vibe" && q) {
+    const items = await semanticSearch(q, limit);
+    return { items, total: items.length };
+  }
 
   let query = supabase.from("wallpapers").select("*", { count: "exact" }).eq("status", "published");
   if (device) query = query.contains("devices", [device]);

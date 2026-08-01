@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UploadCloud, Check, Loader2, X } from "lucide-react";
+import { UploadCloud, Check, Loader2, X, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createWallpaper } from "@/app/admin/actions";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -16,6 +16,10 @@ type Item = {
   name: string;
   status: "queued" | "uploading" | "done" | "error";
   message?: string;
+  description?: string;
+  altText?: string;
+  aiTags?: string;
+  aiState?: "idle" | "loading" | "done" | "error";
 };
 
 async function readDimensions(file: File): Promise<{ w: number; h: number }> {
@@ -72,8 +76,39 @@ export default function AdminUploadPage() {
   function setName(i: number, v: string) {
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, name: v } : it)));
   }
+  function setDescription(i: number, v: string) {
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, description: v } : it)));
+  }
   function remove(i: number) {
     setItems((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  /** AI auto-fill: sends the raw file to Gemini and fills title/description/alt/tags. */
+  async function autoFill(i: number) {
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "loading" } : it)));
+    try {
+      const form = new FormData();
+      form.append("file", items[i].file);
+      const res = await fetch("/api/admin/describe", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "AI description failed");
+      setItems((prev) =>
+        prev.map((it, idx) =>
+          idx === i
+            ? {
+                ...it,
+                name: json.title || it.name,
+                description: json.description || it.description,
+                altText: json.altText || it.altText,
+                aiTags: Array.isArray(json.tags) ? json.tags.join(", ") : it.aiTags,
+                aiState: "done",
+              }
+            : it,
+        ),
+      );
+    } catch {
+      setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, aiState: "error" } : it)));
+    }
   }
 
   async function publishAll() {
@@ -85,7 +120,7 @@ export default function AdminUploadPage() {
       if (items[i].status === "done") continue;
       setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: "uploading" } : it)));
       try {
-        const { file, name } = items[i];
+        const { file, name, description, altText, aiTags } = items[i];
         const { w, h } = await readDimensions(file);
         const useDevices = autoDevices ? suggestDevices(w, h) : devices;
         const ext = file.name.split(".").pop() || "jpg";
@@ -95,6 +130,10 @@ export default function AdminUploadPage() {
           .from("wallpapers")
           .upload(path, file, { cacheControl: "31536000", upsert: false });
         if (upErr) throw new Error(upErr.message);
+
+        const itemTagList = aiTags
+          ? Array.from(new Set([...aiTags.split(",").map((t) => slugify(t.trim())).filter(Boolean), ...tagList]))
+          : tagList;
 
         await createWallpaper({
           title: name,
@@ -107,7 +146,9 @@ export default function AdminUploadPage() {
           category_id: categoryId || null,
           credit: credit || null,
           credit_url: creditUrl || null,
-          tags: tagList,
+          tags: itemTagList,
+          description: description || undefined,
+          alt_text: altText || undefined,
           scheduled_for: schedule || null,
         });
 
@@ -233,19 +274,48 @@ export default function AdminUploadPage() {
       {items.length > 0 && (
         <div className="mt-5 space-y-2">
           {items.map((it, i) => (
-            <div key={i} className="surface flex items-center gap-3 rounded-card p-3">
-              <StatusIcon status={it.status} />
-              <input
-                value={it.name}
-                onChange={(e) => setName(i, e.target.value)}
-                className="focusable h-9 flex-1 rounded-pill bg-white/5 px-3 text-sm text-chalk"
-              />
-              <span className="hidden text-xs text-chalk-faint sm:inline">{formatBytes(it.file.size)}</span>
-              {it.status === "error" && <span className="text-xs text-accent-2">{it.message}</span>}
-              {it.status !== "uploading" && (
-                <button onClick={() => remove(i)} aria-label="Remove" className="text-chalk-faint hover:text-chalk">
-                  <X size={16} />
+            <div key={i} className="surface space-y-2 rounded-card p-3">
+              <div className="flex items-center gap-3">
+                <StatusIcon status={it.status} />
+                <input
+                  value={it.name}
+                  onChange={(e) => setName(i, e.target.value)}
+                  className="focusable h-9 flex-1 rounded-pill bg-white/5 px-3 text-sm text-chalk"
+                />
+                <button
+                  type="button"
+                  onClick={() => autoFill(i)}
+                  disabled={it.aiState === "loading"}
+                  title="Auto-fill title, description, alt text & tags with AI"
+                  className="focusable inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-line px-3 py-1.5 text-xs font-medium text-chalk-muted transition hover:text-chalk disabled:opacity-50"
+                >
+                  {it.aiState === "loading" ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={13} className="text-accent" />
+                  )}
+                  AI fill
                 </button>
+                <span className="hidden text-xs text-chalk-faint sm:inline">{formatBytes(it.file.size)}</span>
+                {it.status === "error" && <span className="text-xs text-accent-2">{it.message}</span>}
+                {it.status !== "uploading" && (
+                  <button onClick={() => remove(i)} aria-label="Remove" className="text-chalk-faint hover:text-chalk">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              {it.aiState === "error" && <p className="pl-9 text-xs text-accent-2">AI fill failed — check GEMINI_API_KEY.</p>}
+              {(it.description !== undefined || it.aiState === "done") && (
+                <div className="pl-9">
+                  <textarea
+                    value={it.description ?? ""}
+                    onChange={(e) => setDescription(i, e.target.value)}
+                    placeholder="AI-written description will appear here"
+                    rows={2}
+                    className="focusable w-full resize-none rounded-lg bg-white/5 px-3 py-2 text-xs text-chalk-muted placeholder:text-chalk-faint"
+                  />
+                  {it.aiTags && <p className="mt-1 text-xs text-chalk-faint">Tags: {it.aiTags}</p>}
+                </div>
               )}
             </div>
           ))}

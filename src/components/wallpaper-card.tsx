@@ -76,7 +76,7 @@ export function WallpaperCard({
             width: 640,
             height: Math.round(640 * (w.height / w.width)),
           })}
-          alt={w.title}
+          alt={w.alt_text || w.title}
           loading={priority ? "eager" : "lazy"}
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}

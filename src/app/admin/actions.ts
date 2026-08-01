@@ -5,6 +5,8 @@ import { isAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { notifyNewWallpaper } from "@/lib/push";
+import { embedImageUrl } from "@/lib/ai";
+import { publicUrl } from "@/lib/supabase/storage";
 
 async function assertAdmin() {
   if (!(await isAdmin())) throw new Error("Not authorized");
@@ -24,6 +26,7 @@ export async function createWallpaper(input: {
   credit?: string | null;
   credit_url?: string | null;
   description?: string;
+  alt_text?: string;
   scheduled_for?: string | null;
   is_featured?: boolean;
 }) {
@@ -31,28 +34,42 @@ export async function createWallpaper(input: {
   const admin = createAdminClient();
   const scheduled = input.scheduled_for && new Date(input.scheduled_for) > new Date();
   const slug = `${slugify(input.title)}-${Date.now().toString(36)}${Math.floor(Math.random() * 1e3)}`;
-  const { error } = await admin.from("wallpapers").insert({
-    slug,
-    title: input.title,
-    description: input.description ?? null,
-    storage_path: input.storage_path,
-    width: input.width,
-    height: input.height,
-    file_size: input.file_size,
-    orientation: input.width >= input.height ? "landscape" : "portrait",
-    device: input.device,
-    devices: input.devices && input.devices.length ? input.devices : [input.device],
-    category_id: input.category_id ?? null,
-    credit: input.credit?.trim() || null,
-    credit_url: input.credit_url?.trim() || null,
-    tags: input.tags,
-    is_featured: input.is_featured ?? false,
-    status: scheduled ? "scheduled" : "published",
-    scheduled_for: scheduled ? input.scheduled_for : null,
-    published_at: scheduled ? null : new Date().toISOString(),
-  });
+  const { data: inserted, error } = await admin
+    .from("wallpapers")
+    .insert({
+      slug,
+      title: input.title,
+      description: input.description ?? null,
+      alt_text: input.alt_text ?? null,
+      storage_path: input.storage_path,
+      width: input.width,
+      height: input.height,
+      file_size: input.file_size,
+      orientation: input.width >= input.height ? "landscape" : "portrait",
+      device: input.device,
+      devices: input.devices && input.devices.length ? input.devices : [input.device],
+      category_id: input.category_id ?? null,
+      credit: input.credit?.trim() || null,
+      credit_url: input.credit_url?.trim() || null,
+      tags: input.tags,
+      is_featured: input.is_featured ?? false,
+      status: scheduled ? "scheduled" : "published",
+      scheduled_for: scheduled ? input.scheduled_for : null,
+      published_at: scheduled ? null : new Date().toISOString(),
+    })
+    .select("id, storage_path")
+    .single();
   if (error) throw new Error(error.message);
   if (!scheduled) await notifyNewWallpaper(input.title, slug);
+
+  // Best-effort embedding for semantic search + find-similar. Never blocks
+  // publishing if the AI key is missing or the call fails.
+  if (inserted) {
+    embedImageUrl(publicUrl(inserted.storage_path))
+      .then((vec) => admin.from("wallpapers").update({ embedding: vec }).eq("id", inserted.id))
+      .catch((e) => console.error("embedImageUrl failed", e instanceof Error ? e.message : e));
+  }
+
   revalidatePath("/");
 }
 

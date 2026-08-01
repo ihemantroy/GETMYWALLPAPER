@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, Sparkles } from "lucide-react";
+import { Menu, X, Search, Sparkles, Wand2 } from "lucide-react";
 import { NotifyBell } from "@/components/notify-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -20,6 +20,7 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [q, setQ] = useState("");
+  const [vibe, setVibe] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -32,7 +33,8 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
     e.preventDefault();
     const t = q.trim();
     window.dispatchEvent(new Event("app:navstart"));
-    router.push(t ? `/?q=${encodeURIComponent(t)}` : "/");
+    if (!t) return router.push("/");
+    router.push(`/?q=${encodeURIComponent(t)}${vibe ? "&mode=vibe" : ""}`);
   }
 
   return (
@@ -57,9 +59,20 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search all wallpapers"
-            className="focusable h-11 w-full rounded-full border border-line bg-ink-2 pl-11 pr-4 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
+            placeholder={vibe ? "Describe a vibe — “cozy autumn, warm light”" : "Search all wallpapers"}
+            className="focusable h-11 w-full rounded-full border border-line bg-ink-2 pl-11 pr-11 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
           />
+          <button
+            type="button"
+            onClick={() => setVibe((v) => !v)}
+            aria-pressed={vibe}
+            title="AI vibe search — describe a mood instead of exact keywords"
+            className={`focusable absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full transition ${
+              vibe ? "bg-accent text-ink" : "text-chalk-faint hover:text-chalk"
+            }`}
+          >
+            <Wand2 size={15} />
+          </button>
         </form>
 
         {/* right cluster */}
@@ -117,9 +130,19 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search all wallpapers"
-                className="focusable h-11 w-full rounded-full border border-line bg-ink-2 pl-11 pr-3 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
+                placeholder={vibe ? "Describe a vibe…" : "Search all wallpapers"}
+                className="focusable h-11 w-full rounded-full border border-line bg-ink-2 pl-11 pr-11 text-sm text-chalk placeholder:text-chalk-faint [&::-webkit-search-cancel-button]:hidden"
               />
+              <button
+                type="button"
+                onClick={() => setVibe((v) => !v)}
+                aria-pressed={vibe}
+                className={`focusable absolute right-3.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full transition ${
+                  vibe ? "bg-accent text-ink" : "text-chalk-faint hover:text-chalk"
+                }`}
+              >
+                <Wand2 size={15} />
+              </button>
             </form>
             <Link href="/create" onClick={() => setOpen(false)} className="mx-2 mb-1 flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">
               <Sparkles size={16} /> Create a wallpaper

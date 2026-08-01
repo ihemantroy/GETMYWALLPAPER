@@ -27,6 +27,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
     device: one(spRaw.device),
     sort: one(spRaw.sort) as "latest" | "popular" | undefined,
     q: one(spRaw.q),
+    mode: one(spRaw.mode) as "keyword" | "vibe" | undefined,
     view: one(spRaw.view),
     page: page > 1 ? String(page) : undefined,
   };
@@ -41,6 +42,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
           device: params.device,
           sort: params.sort ?? "latest",
           q: params.q,
+          mode: params.mode,
           page,
         }),
   ]);
@@ -50,7 +52,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   // Page heading adapts to the current view
   let title = "Wallpapers";
   let sub = "Free wallpapers in HD and 4K for your desktop and phone. Browse the collection or search for a vibe.";
-  if (params.q) { title = `“${params.q}”`; sub = `Wallpapers matching your search.`; }
+  if (params.q && params.mode === "vibe") { title = `“${params.q}”`; sub = `AI vibe search — closest matches by mood, not just keywords.`; }
+  else if (params.q) { title = `“${params.q}”`; sub = `Wallpapers matching your search.`; }
   else if (catName) { title = catName; sub = `Wallpapers in the ${catName} collection.`; }
   else if (params.device && DEVICE_COPY[params.device]) { title = DEVICE_COPY[params.device].title; sub = DEVICE_COPY[params.device].sub; }
   else if (isFav) { title = "Your favorites"; sub = "Wallpapers you've saved. Stored on this device."; }

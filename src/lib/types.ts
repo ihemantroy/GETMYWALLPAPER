@@ -13,6 +13,7 @@ export interface Wallpaper {
   slug: string;
   title: string;
   description: string | null;
+  alt_text: string | null;
   storage_path: string;
   width: number;
   height: number;

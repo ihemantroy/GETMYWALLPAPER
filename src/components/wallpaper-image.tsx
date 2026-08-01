@@ -31,7 +31,7 @@ export function WallpaperImage({ w }: { w: Wallpaper }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={publicUrl(w.storage_path)}
-          alt={w.title}
+          alt={w.alt_text || w.title}
           width={dw}
           height={dh}
           onLoad={(e) => { setNat({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight }); setLoaded(true); }}

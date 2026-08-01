@@ -77,4 +77,22 @@ Change those two and the logo, buttons, active states, and glows all follow.
 ## Notes
 
 - **Scheduled drops** are stored with status = 'scheduled'; add a Vercel Cron or Supabase scheduled function to flip them to published at their time.
-- **AI auto-tagging** — the data model has the fields; drop your provider into the upload action to pre-fill tags before publish.
+
+## AI features
+
+Four AI features, all built on free tiers:
+
+1. **AI wallpaper generator** (`/create` → "AI Generate" tab) — free, no API key, via Pollinations.ai. Rate-limited to 12 generations/day per visitor (see `generation_log` table / `src/app/api/generate/route.ts`).
+2. **Auto title/description/alt-text/tags** (`/admin/upload` → "AI fill" button per file) — needs `GEMINI_API_KEY`.
+3. **AI semantic ("vibe") search** — the wand icon in the search bar. Needs `JINA_API_KEY`.
+4. **Find similar** — shown automatically on wallpaper pages once a wallpaper has an embedding. Needs `JINA_API_KEY`.
+
+### One-time setup
+
+1. Run `supabase/migration-ai-features.sql` in the Supabase SQL editor (adds pgvector, the `embedding`/`alt_text` columns, and the `match_wallpapers` function).
+2. **Get a free Gemini key:** go to https://aistudio.google.com/apikey → "Create API key" → choose or create a Google Cloud project (no credit card needed for the free tier) → copy the key into `GEMINI_API_KEY`.
+3. **Get a free Jina key:** go to https://jina.ai/embeddings (or https://jina.ai/api-dashboard) → sign up → copy your API key into `JINA_API_KEY`. Free tier includes a generous number of embedding tokens with no card required.
+4. Add both keys to `.env.local` locally, and to your Vercel project's Environment Variables for production, then redeploy.
+5. New uploads get an embedding automatically. For wallpapers uploaded *before* this feature existed, go to `/admin/ai` and click "Backfill missing embeddings".
+
+Everything degrades gracefully if a key is missing: uploads/publishing still work without `GEMINI_API_KEY` (you just won't see AI-filled fields), and search/wallpaper pages fall back to the original keyword search / category-match logic without `JINA_API_KEY`.

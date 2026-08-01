@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Download } from "lucide-react";
-import { getWallpaperBySlug, getRelated } from "@/lib/queries";
+import { getWallpaperBySlug, getRelated, getSimilarByEmbedding } from "@/lib/queries";
 import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoriteButton } from "@/components/favorite-button";
 import { ShareButton } from "@/components/share-button";
 import { DownloadButton } from "@/components/download-button";
-import { WallpaperImage } from "@/components/wallpaper-image";
+import { WallpaperEditor } from "@/components/wallpaper-editor";
 import { AdSlot } from "@/components/ad-slot";
 import { renderUrl, publicUrl } from "@/lib/supabase/storage";
 import { formatCount } from "@/lib/utils";
@@ -36,7 +36,9 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
   const { slug } = await params;
   const w = await getWallpaperBySlug(slug);
   if (!w) notFound();
-  const related = await getRelated(w);
+  const similar = await getSimilarByEmbedding(w, 6);
+  const related = similar.length > 0 ? similar : await getRelated(w);
+  const isVisuallySimilar = similar.length > 0;
 
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://getyourwallpaper.com").replace("://www.", "://");
   const jsonLd = {
@@ -96,7 +98,7 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
       </div>
 
       {/* the image — big, centered, flat. Badge reads the real rendered size */}
-      <WallpaperImage w={w} />
+      <WallpaperEditor w={w} />
 
       {/* meta line */}
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-chalk-muted">
@@ -130,7 +132,9 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
 
       {related.length > 0 && (
         <section className="mt-14">
-          <h2 className="mb-6 font-display text-2xl font-semibold">More like this</h2>
+          <h2 className="mb-6 font-display text-2xl font-semibold">
+            {isVisuallySimilar ? "Visually similar" : "More like this"}
+          </h2>
           <WallpaperGrid wallpapers={related} />
         </section>
       )}
