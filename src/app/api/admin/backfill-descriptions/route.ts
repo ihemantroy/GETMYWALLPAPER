@@ -33,6 +33,15 @@ async function describeWithRetry(url: string) {
   }
 }
 
+type BackfillRow = {
+  id: string;
+  storage_path: string;
+  title: string;
+  description: string | null;
+  alt_text: string | null;
+  tags: string[] | null;
+};
+
 // A row "needs" a backfill if it's missing a description, alt text, or has no
 // tags at all — matches the AdSense "low value content" fix: every published
 // wallpaper should carry real, visible text.
@@ -49,8 +58,8 @@ export async function POST() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // .or() above can't express "tags is an empty array", so also catch that here.
-  const needsWork = (rows ?? []).filter(
-    (r) => !r.description || !r.alt_text || !r.tags || (Array.isArray(r.tags) && r.tags.length === 0),
+  const needsWork = ((rows ?? []) as BackfillRow[]).filter(
+    (r: BackfillRow) => !r.description || !r.alt_text || !r.tags || (Array.isArray(r.tags) && r.tags.length === 0),
   );
 
   let processed = 0;
@@ -80,8 +89,8 @@ export async function POST() {
     .select("id, description, alt_text, tags", { count: "exact" })
     .eq("status", "published")
     .or("description.is.null,alt_text.is.null,tags.is.null");
-  const remaining = (remainingRows ?? []).filter(
-    (r) => !r.description || !r.alt_text || !r.tags || (Array.isArray(r.tags) && r.tags.length === 0),
+  const remaining = ((remainingRows ?? []) as BackfillRow[]).filter(
+    (r: BackfillRow) => !r.description || !r.alt_text || !r.tags || (Array.isArray(r.tags) && r.tags.length === 0),
   ).length || (count ?? 0);
 
   if (processed === 0 && needsWork.length > 0 && lastError) {
