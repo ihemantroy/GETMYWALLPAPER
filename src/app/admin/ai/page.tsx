@@ -11,6 +11,11 @@ export default function AdminAiPage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [descRunning, setDescRunning] = useState(false);
+  const [descProcessed, setDescProcessed] = useState(0);
+  const [descRemaining, setDescRemaining] = useState<number | null>(null);
+  const [descError, setDescError] = useState<string | null>(null);
+
   async function runBackfill() {
     setRunning(true);
     setError(null);
@@ -50,6 +55,41 @@ export default function AdminAiPage() {
     }
   }
 
+  async function runDescriptionBackfill() {
+    setDescRunning(true);
+    setDescError(null);
+    setDescProcessed(0);
+    const MAX_CONSECUTIVE_EMPTY_BATCHES = 5;
+    let consecutiveEmptyBatches = 0;
+    try {
+      let left = Infinity;
+      while (left > 0) {
+        const res = await fetch("/api/admin/backfill-descriptions", { method: "POST" });
+        const json = await res.json();
+        if (!res.ok && !json.remaining) throw new Error(json.error || "Backfill failed");
+        setDescProcessed((p) => p + (json.processed || 0));
+        setDescRemaining(json.remaining);
+        left = json.remaining;
+
+        if (json.processed === 0 && json.remaining > 0) {
+          consecutiveEmptyBatches++;
+          if (consecutiveEmptyBatches > MAX_CONSECUTIVE_EMPTY_BATCHES) {
+            throw new Error(
+              json.error || json.lastError || "Repeated failures — stopped after several retries. See error above."
+            );
+          }
+          await new Promise((r) => setTimeout(r, 15000));
+        } else {
+          consecutiveEmptyBatches = 0;
+        }
+      }
+    } catch (e) {
+      setDescError(e instanceof Error ? e.message : "Backfill failed");
+    } finally {
+      setDescRunning(false);
+    }
+  }
+
   return (
     <div className="max-w-2xl">
       <h1 className="font-display text-3xl font-bold">AI features</h1>
@@ -74,6 +114,26 @@ export default function AdminAiPage() {
           </p>
         )}
         {error && <p className="text-sm text-accent-2">{error}</p>}
+      </GlassCard>
+
+      <GlassCard interactive={false} className="mt-4 space-y-3 p-5">
+        <h2 className="font-display text-lg font-semibold">Description &amp; tags backfill</h2>
+        <p className="text-sm text-chalk-muted">
+          Fills in AI-written description, alt text, and tags for any published wallpaper missing them —
+          useful for wallpapers uploaded before this ran automatically, or bulk-imported without metadata.
+          Existing values are never overwritten, only genuinely missing fields are filled in.
+        </p>
+        <GlassButton variant="iris" onClick={runDescriptionBackfill} disabled={descRunning}>
+          {descRunning ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+          {descRunning ? "Processing…" : "Backfill missing descriptions"}
+        </GlassButton>
+        {descProcessed > 0 && (
+          <p className="flex items-center gap-1.5 text-sm text-accent">
+            <Check size={15} /> Updated {descProcessed} wallpaper{descProcessed === 1 ? "" : "s"}
+            {descRemaining ? ` — ${descRemaining} left, keep this tab open` : " — all done"}
+          </p>
+        )}
+        {descError && <p className="text-sm text-accent-2">{descError}</p>}
       </GlassCard>
 
       <GlassCard interactive={false} className="mt-4 space-y-2 p-5 text-sm text-chalk-muted">
