@@ -50,7 +50,7 @@ export function SetWallpaperButton({ fileUrl, title }: { fileUrl: string; title:
       <button
         onClick={handleClick}
         disabled={busy}
-        className="btn-accent focusable inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-semibold disabled:opacity-60"
+        className="btn-accent focusable inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold disabled:opacity-60"
       >
         <Wand2 size={16} />
         {busy ? "Preparing…" : "Set as wallpaper"}
