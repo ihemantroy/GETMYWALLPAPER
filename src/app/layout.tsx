@@ -6,6 +6,9 @@ import { Nav } from "@/components/nav";
 import { getSessionUser, isAdmin } from "@/lib/auth";
 import { ChromeGate } from "@/components/chrome-gate";
 import { PwaRegister } from "@/components/pwa-register";
+import { InstallProvider } from "@/components/install-provider";
+import { InstallButton } from "@/components/install-button";
+import { IosInstallGuide } from "@/components/ios-install-guide";
 import { TopProgressBar } from "@/components/top-progress-bar";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Footer } from "@/components/footer";
@@ -99,10 +102,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <TopProgressBar />
-        <ChromeGate><NavWrapper /></ChromeGate>
-        <div className="min-h-screen">{children}</div>
-        <ChromeGate><Footer /></ChromeGate>
+        <PwaRegister />
+        <InstallProvider>
+          <TopProgressBar />
+          <ChromeGate><NavWrapper /></ChromeGate>
+          <div className="min-h-screen">{children}</div>
+          <ChromeGate><Footer /></ChromeGate>
+          <InstallButton />
+          <IosInstallGuide />
+        </InstallProvider>
         {adsenseClient && (
           <Script
             id="adsense" async strategy="afterInteractive" crossOrigin="anonymous"

@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, Sparkles, Wand2 } from "lucide-react";
+import { Menu, X, Search, Sparkles, Wand2, Download } from "lucide-react";
 import { NotifyBell } from "@/components/notify-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useInstall } from "@/components/install-provider";
 
 const LINKS = [
   { label: "Home", href: "/" },
@@ -17,6 +18,7 @@ const LINKS = [
 
 export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: string | null }) {
   const router = useRouter();
+  const { canInstall, isIosSafari, promptInstall, openIosGuide } = useInstall();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [q, setQ] = useState("");
@@ -88,6 +90,16 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
             )}
           </nav>
 
+          {canInstall && (
+            <button
+              onClick={() => (isIosSafari ? openIosGuide() : promptInstall())}
+              title="Install our app"
+              className="focusable mr-1 hidden h-10 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-sm font-semibold text-accent transition hover:bg-accent/20 sm:inline-flex"
+            >
+              <Download size={15} /> Install app
+            </button>
+          )}
+
           <Link
             href="/create"
             className="focusable mr-1 hidden h-10 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-sm font-semibold text-accent transition hover:bg-accent/20 sm:inline-flex"
@@ -147,6 +159,14 @@ export function Nav({ admin, userInitial }: { admin?: boolean; userInitial?: str
             <Link href="/create" onClick={() => setOpen(false)} className="mx-2 mb-1 flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">
               <Sparkles size={16} /> Create a wallpaper
             </Link>
+            {canInstall && (
+              <button
+                onClick={() => { isIosSafari ? openIosGuide() : promptInstall(); setOpen(false); }}
+                className="mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-left text-sm font-semibold text-accent"
+              >
+                <Download size={16} /> Install our app
+              </button>
+            )}
             {LINKS.map((l) => (
               <Link key={l.label} href={l.href} onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-sm text-chalk-muted transition hover:bg-ink-3 hover:text-chalk">
                 {l.label}
