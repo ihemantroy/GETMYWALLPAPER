@@ -31,7 +31,10 @@ export async function GET(req: Request) {
       : "https://unsplash.com",
     alt: p.alt_description || p.description || "",
     thumb: p.urls?.small,
-    original: p.urls?.full,
+    // urls.full is quality-compressed (~80%) and size-limited. urls.raw is the
+    // photographer's native upload — we cap the long edge at 4K and set q=85 so
+    // downloads are true 4K-grade instead of a small compressed copy.
+    original: p.urls?.raw ? `${p.urls.raw}&w=3840&q=85&fm=jpg` : p.urls?.full,
     download_location: p.links?.download_location || null,
   }));
   return NextResponse.json({ photos, page: Number(page) });

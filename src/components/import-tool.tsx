@@ -5,7 +5,7 @@ import { Search, Download, Check, Loader2, Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types";
 
-type Source = "pexels" | "unsplash" | "pixabay" | "nasa";
+type Source = "pexels" | "unsplash" | "pixabay" | "nasa" | "wallhaven" | "peapix";
 type Photo = {
   id: number | string; width: number; height: number;
   photographer: string; photographer_url: string;
@@ -98,6 +98,8 @@ export function ImportTool() {
         <Tab s="pexels" label="Pexels" />
         <Tab s="unsplash" label="Unsplash" />
         <Tab s="pixabay" label="Pixabay" />
+        <Tab s="wallhaven" label="Wallhaven" />
+        <Tab s="peapix" label="Peapix" />
         <Tab s="nasa" label="NASA" />
       </div>
 
@@ -128,6 +130,12 @@ export function ImportTool() {
             className="surface focusable shrink-0 rounded-pill px-3.5 py-1.5 text-xs text-chalk-muted hover:text-chalk">{c}</button>
         ))}
       </div>
+
+      {source === "peapix" && (
+        <p className="mb-4 text-xs text-chalk-faint">
+          Peapix shows today’s Bing &amp; Windows Spotlight picks — it has no search, so the box and tags are ignored here.
+        </p>
+      )}
 
       {error && <p className="mb-4 text-sm text-accent-2">{error}</p>}
 
