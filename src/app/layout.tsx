@@ -59,6 +59,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t='dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
           }}
         />
+        {/* Capture the install prompt event immediately — Chrome can fire it
+            before React mounts, and if no listener is ready yet the event is
+            lost and the Install button never appears. Stash it on window. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){window.__bip=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event('bip:captured'));});window.addEventListener('appinstalled',function(){window.__bip=null;window.dispatchEvent(new Event('bip:installed'));});})();`,
+          }}
+        />
         <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
         <link
           rel="stylesheet"
