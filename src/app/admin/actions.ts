@@ -158,6 +158,14 @@ export async function toggleFeatured(id: string, next: boolean) {
   revalidatePath("/");
 }
 
+export async function toggleParallax(id: string, next: boolean) {
+  await assertAdmin();
+  const admin = createAdminClient();
+  await admin.from("wallpapers").update({ is_parallax: next }).eq("id", id);
+  revalidatePath("/admin/wallpapers");
+  revalidatePath("/");
+}
+
 /* ----------------------------- categories ----------------------------- */
 
 export async function createCategory(name: string) {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { Star, Trash2, Loader2, Sun } from "lucide-react";
-import { deleteWallpaper, toggleFeatured, setWotd } from "@/app/admin/actions";
+import { Star, Trash2, Loader2, Sun, Boxes } from "lucide-react";
+import { deleteWallpaper, toggleFeatured, setWotd, toggleParallax } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
 
 export function WallpaperRowActions({
@@ -10,16 +10,30 @@ export function WallpaperRowActions({
   storagePath,
   featured,
   wotd,
+  parallax,
 }: {
   id: string;
   storagePath: string;
   featured: boolean;
   wotd: boolean;
+  parallax: boolean;
 }) {
   const [pending, start] = useTransition();
 
   return (
     <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => start(() => toggleParallax(id, !parallax))}
+        disabled={pending}
+        aria-label={parallax ? "Remove from 3D Parallax" : "Mark as 3D Parallax"}
+        title="3D Parallax (shows in the app's 3D section)"
+        className={cn(
+          "focusable surface grid h-9 w-9 place-items-center rounded-pill transition",
+          parallax ? "text-accent" : "text-chalk-muted hover:text-chalk",
+        )}
+      >
+        <Boxes size={15} />
+      </button>
       <button
         onClick={() => start(() => setWotd(id, !wotd))}
         disabled={pending}

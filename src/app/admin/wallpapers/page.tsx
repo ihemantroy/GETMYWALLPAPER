@@ -54,7 +54,7 @@ export default async function AdminWallpapers() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <WallpaperEditor w={w} categories={categories} />
-                  <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} wotd={w.is_wotd} />
+                  <WallpaperRowActions id={w.id} storagePath={w.storage_path} featured={w.is_featured} wotd={w.is_wotd} parallax={!!w.is_parallax} />
                 </div>
               </div>
             </GlassCard>

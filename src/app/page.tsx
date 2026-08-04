@@ -6,6 +6,7 @@ import { Pagination } from "@/components/pagination";
 import { BrowseBar } from "@/components/browse-bar";
 import { PopularTags } from "@/components/popular-tags";
 import { DeviceWelcome } from "@/components/device-welcome";
+import { ParallaxAppBanner } from "@/components/parallax-app-banner";
 import { AdSlot } from "@/components/ad-slot";
 
 export const revalidate = 120;
@@ -67,6 +68,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
         <p className="mt-2 text-sm text-chalk-muted sm:text-base">{sub}</p>
       </header>
+
+      {/* ---------- 3D PARALLAX APP BANNER (default view only) ---------- */}
+      {!isFav && !params.q && !catName && !params.device && <ParallaxAppBanner />}
 
       {/* ---------- POPULAR CHIPS (default view only) ---------- */}
       {!isFav && !params.q && !catName && !params.device && <PopularTags />}

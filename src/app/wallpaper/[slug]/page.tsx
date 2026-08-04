@@ -7,7 +7,6 @@ import { WallpaperGrid } from "@/components/wallpaper-grid";
 import { FavoriteButton } from "@/components/favorite-button";
 import { ShareButton } from "@/components/share-button";
 import { DownloadButton } from "@/components/download-button";
-import { DepthParallaxButton } from "@/components/depth-parallax-viewer";
 import { SetWallpaperButton } from "@/components/set-wallpaper-button";
 import { WallpaperEditor } from "@/components/wallpaper-editor";
 import { AdSlot } from "@/components/ad-slot";
@@ -95,7 +94,6 @@ export default async function WallpaperPage({ params }: { params: Promise<{ slug
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <FavoriteButton id={w.id} className="h-11 w-11" />
           <ShareButton slug={w.slug} />
-          <DepthParallaxButton src={renderUrl(w.storage_path, { width: 1600 })} title={w.title} />
           <SetWallpaperButton fileUrl={publicUrl(w.storage_path)} title={w.title} />
           <DownloadButton w={w} />
         </div>

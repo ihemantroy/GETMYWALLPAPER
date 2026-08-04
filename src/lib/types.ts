@@ -33,6 +33,7 @@ export interface Wallpaper {
   status: WallpaperStatus;
   is_featured: boolean;
   is_wotd: boolean;
+  is_parallax?: boolean;
   view_count: number;
   download_count: number;
   like_count: number;
