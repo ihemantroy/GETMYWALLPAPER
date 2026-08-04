@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,18 +14,22 @@ import {
   Play,
   Apple,
   PartyPopper,
+  Check,
 } from "lucide-react";
+import { partyPoppers } from "@/lib/confetti";
 
-// 👉 Replace with your Play Store link / App Store link / waitlist form once live.
-const WAITLIST_LINK = "#";
+// 👉 Store / App Store links once live.
 const PLAY_STORE_LINK = "#";
 const APP_STORE_LINK = "#";
 
-// 👉 Set your real launch date/time here (local time is fine).
+// 👉 Your real launch date/time (local time is fine).
 const LAUNCH_DATE = new Date("2026-09-15T00:00:00");
 
-// 👉 Starting waitlist count. Replace with a real count from your DB once wired up.
-const WAITLIST_START = 1000;
+// Fallback display count if the /api/waitlist backend isn't wired up yet.
+const WAITLIST_FALLBACK = 1000;
+
+// How far (in degrees) the whole phone tilts in 3D at full cursor deflection.
+const TILT = 9;
 
 const FEATURES = [
   { icon: Box, label: "Real Depth" },
@@ -37,27 +41,74 @@ const FEATURES = [
 ] as const;
 
 const AVATAR_COLORS = ["#0D8B6C", "#16B089", "#2DD4A7", "#0B6E56", "#22C55E"];
-const CONFETTI_COLORS = ["#0D8B6C", "#16B089", "#2DD4A7", "#F4F4F6", "#FBBF24", "#60A5FA"];
+
+// ----------------------------------------------------------------------------
+//  Small hooks
+// ----------------------------------------------------------------------------
 
 function useCountdown(target: Date) {
   const [left, setLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
-
   useEffect(() => {
     function tick() {
       const diff = Math.max(0, target.getTime() - Date.now());
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / (1000 * 60)) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      setLeft({ d, h, m, s });
+      setLeft({
+        d: Math.floor(diff / 86_400_000),
+        h: Math.floor((diff / 3_600_000) % 24),
+        m: Math.floor((diff / 60_000) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
     }
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [target]);
-
   return left;
 }
+
+/** Eases a displayed integer toward `target` so the counter visibly ticks up. */
+function useAnimatedNumber(target: number | null) {
+  const [display, setDisplay] = useState(0);
+  const current = useRef(0);
+  useEffect(() => {
+    if (target == null) return;
+    const from = current.current;
+    const to = target;
+    if (from === to) return;
+    const dur = Math.min(1400, 350 + Math.abs(to - from) * 1.1);
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = Math.round(from + (to - from) * eased);
+      current.current = v;
+      setDisplay(v);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return display;
+}
+
+function getBrowserId(): string {
+  try {
+    let id = localStorage.getItem("gyw_bid");
+    if (!id) {
+      id =
+        (crypto as Crypto & { randomUUID?: () => string }).randomUUID?.() ??
+        `b_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem("gyw_bid", id);
+    }
+    return id;
+  } catch {
+    return `b_${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  Countdown box
+// ----------------------------------------------------------------------------
 
 function TimeBox({ value, label }: { value: number; label: string }) {
   return (
@@ -70,192 +121,357 @@ function TimeBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-type Confetto = {
-  id: number;
-  left: number;
-  color: string;
-  size: number;
-  duration: number;
-  delay: number;
-  rotate: number;
-  drift: number;
-  shape: "rect" | "circle";
-};
-
-/** Full-viewport confetti burst — fixed positioning so it works identically on phone, tablet, laptop and desktop. */
-function ConfettiOverlay({ show }: { show: boolean }) {
-  const pieces = useMemo<Confetto[]>(() => {
-    if (!show) return [];
-    return Array.from({ length: 140 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      size: 6 + Math.random() * 8,
-      duration: 2.6 + Math.random() * 1.8,
-      delay: Math.random() * 0.5,
-      rotate: Math.random() * 360,
-      drift: (Math.random() - 0.5) * 160,
-      shape: Math.random() > 0.5 ? "rect" : "circle",
-    }));
-  }, [show]);
-
-  if (!show) return null;
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden">
-      <style>{`
-        @keyframes gyw-confetti-fall {
-          0% { transform: translate(0, -10vh) rotate(0deg); opacity: 1; }
-          100% { transform: translate(var(--drift), 110vh) rotate(720deg); opacity: 0.9; }
-        }
-        @keyframes gyw-pop-in {
-          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
-          15% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-          85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          100% { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
-        }
-      `}</style>
-
-      {pieces.map((p) => (
-        <span
-          key={p.id}
-          className="absolute top-0"
-          style={{
-            left: `${p.left}%`,
-            width: p.size,
-            height: p.shape === "rect" ? p.size * 0.4 : p.size,
-            background: p.color,
-            borderRadius: p.shape === "circle" ? "9999px" : "2px",
-            ["--drift" as string]: `${p.drift}px`,
-            animation: `gyw-confetti-fall ${p.duration}s ease-in ${p.delay}s forwards`,
-          }}
-        />
-      ))}
-
-      <div
-        className="fixed left-1/2 top-1/2 flex items-center gap-2 rounded-2xl border border-accent/40 bg-ink-2/95 px-6 py-4 text-center shadow-lift backdrop-blur"
-        style={{ animation: "gyw-pop-in 3s ease forwards" }}
-      >
-        <PartyPopper size={22} className="text-accent" />
-        <span className="font-display text-base font-bold text-chalk sm:text-lg">
-          You're on the list! 🎉
-        </span>
-      </div>
-    </div>
-  );
-}
+// ----------------------------------------------------------------------------
+//  Banner
+// ----------------------------------------------------------------------------
 
 /**
- * "Introducing 3D Parallax" hero banner — announces the upcoming 3D parallax
- * wallpaper app with a live countdown, waitlist CTA (with a confetti celebration
- * on join), feature badges and an animated phone mockup that parallax-shifts
- * with the cursor.
+ * "Introducing 3D Parallax" hero banner. The phone scene tilts in genuine 3D on
+ * a requestAnimationFrame spring (buttery, no CSS-transition lag), the front
+ * rock floats above the glass on the Z axis, a glass glare tracks the cursor,
+ * and joining the waitlist fires a full party-popper celebration while a live,
+ * persistent counter ticks up.
  */
 export function ParallaxAppBanner() {
   const ref = useRef<HTMLDivElement>(null);
   const { d, h, m, s } = useCountdown(LAUNCH_DATE);
-  const [count, setCount] = useState(WAITLIST_START);
+
+  const [count, setCount] = useState<number | null>(null);
+  const shownCount = useAnimatedNumber(count);
   const [joined, setJoined] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [askEmail, setAskEmail] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailSaved, setEmailSaved] = useState(false);
+  const backendOk = useRef(true);
 
-  function onMove(e: React.MouseEvent) {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const mx = ((e.clientX - r.left) / r.width) * 2 - 1;
-    const my = ((e.clientY - r.top) / r.height) * 2 - 1;
-    el.style.setProperty("--mx", mx.toFixed(3));
-    el.style.setProperty("--my", my.toFixed(3));
-  }
-  function onLeave() {
-    const el = ref.current;
-    if (!el) return;
-    el.style.setProperty("--mx", "0");
-    el.style.setProperty("--my", "0");
-  }
-
-  // On touch devices, tilt the layers with the phone's gyroscope instead of the mouse.
+  // ---- live count: load real number, persist locally, poll gently ----------
   useEffect(() => {
-    const isTouch = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
-    if (!isTouch) return;
+    try {
+      if (localStorage.getItem("gyw_wl_joined") === "1") setJoined(true);
+    } catch {}
 
-    function onOrientation(e: DeviceOrientationEvent) {
-      const el = ref.current;
-      if (!el || e.beta == null || e.gamma == null) return;
-      const mx = Math.max(-1, Math.min(1, e.gamma / 30));
-      const my = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
-      el.style.setProperty("--mx", mx.toFixed(3));
-      el.style.setProperty("--my", my.toFixed(3));
+    let alive = true;
+    const cached = (() => {
+      try {
+        const n = Number(localStorage.getItem("gyw_wl_count"));
+        return Number.isFinite(n) && n > 0 ? n : null;
+      } catch {
+        return null;
+      }
+    })();
+
+    async function load() {
+      try {
+        const r = await fetch("/api/waitlist", { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.degraded) backendOk.current = false;
+        const n = Number(j?.count);
+        if (Number.isFinite(n)) {
+          setCount((prev) => (prev != null && n < prev ? prev : n));
+          try {
+            localStorage.setItem("gyw_wl_count", String(n));
+          } catch {}
+        }
+      } catch {
+        backendOk.current = false;
+        if (alive) setCount((prev) => prev ?? cached ?? WAITLIST_FALLBACK);
+      }
     }
 
-    type OrientationEventCtor = typeof DeviceOrientationEvent & {
-      requestPermission?: () => Promise<"granted" | "denied">;
+    // Show the cached number instantly, then reconcile with the server.
+    setCount(cached ?? WAITLIST_FALLBACK);
+    load();
+
+    // Gently reflect others joining while the tab is open (only if backend live).
+    const poll = setInterval(() => {
+      if (backendOk.current) load();
+    }, 30_000);
+
+    return () => {
+      alive = false;
+      clearInterval(poll);
     };
-    const Ctor = (window as unknown as { DeviceOrientationEvent?: OrientationEventCtor }).DeviceOrientationEvent;
-
-    if (Ctor?.requestPermission) {
-      // iOS 13+ requires a user gesture to grant permission; ask on first touch.
-      const grant = () => {
-        Ctor.requestPermission?.().then((state) => {
-          if (state === "granted") window.addEventListener("deviceorientation", onOrientation);
-        });
-        window.removeEventListener("touchstart", grant);
-      };
-      window.addEventListener("touchstart", grant, { once: true });
-      return () => window.removeEventListener("touchstart", grant);
-    }
-
-    window.addEventListener("deviceorientation", onOrientation);
-    return () => window.removeEventListener("deviceorientation", onOrientation);
   }, []);
 
-  function handleJoinWaitlist(e: React.MouseEvent) {
-    e.preventDefault();
-    if (joined) return;
-    setJoined(true);
-    setCount((c) => c + 1);
-    setCelebrate(true);
-    // TODO: wire this up to your real waitlist endpoint (e.g. POST to /api/waitlist).
-    window.setTimeout(() => setCelebrate(false), 3200);
-  }
+  // ---- 3D spring motion: ease cursor/gyro values every frame ---------------
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let curX = 0,
+      curY = 0,
+      tgtX = 0,
+      tgtY = 0,
+      inside = false,
+      running = false,
+      raf = 0;
+
+    const write = () => {
+      el.style.setProperty("--mx", curX.toFixed(4));
+      el.style.setProperty("--my", curY.toFixed(4));
+      el.style.setProperty("--rx", (-curY * TILT).toFixed(3) + "deg");
+      el.style.setProperty("--ry", (curX * TILT).toFixed(3) + "deg");
+      el.style.setProperty("--gx", (50 + curX * 34).toFixed(2) + "%");
+      el.style.setProperty("--gy", (50 + curY * 34).toFixed(2) + "%");
+    };
+
+    const loop = () => {
+      curX += (tgtX - curX) * 0.09;
+      curY += (tgtY - curY) * 0.09;
+      write();
+      const settled =
+        !inside && Math.abs(curX - tgtX) < 0.0004 && Math.abs(curY - tgtY) < 0.0004;
+      if (settled) {
+        curX = tgtX;
+        curY = tgtY;
+        write();
+        running = false;
+        return;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    const kick = () => {
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(loop);
+      }
+    };
+
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      tgtX = ((e.clientX - r.left) / r.width) * 2 - 1;
+      tgtY = ((e.clientY - r.top) / r.height) * 2 - 1;
+      tgtX = Math.max(-1, Math.min(1, tgtX));
+      tgtY = Math.max(-1, Math.min(1, tgtY));
+      inside = true;
+      el.classList.add("is-hot");
+      kick();
+    };
+    const onLeave = () => {
+      inside = false;
+      tgtX = 0;
+      tgtY = 0;
+      el.classList.remove("is-hot");
+      kick();
+    };
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+
+    // Touch devices: tilt with the gyroscope instead of the (absent) cursor.
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    let detachGyro = () => {};
+    if (isTouch) {
+      const onOrientation = (ev: DeviceOrientationEvent) => {
+        if (ev.beta == null || ev.gamma == null) return;
+        tgtX = Math.max(-1, Math.min(1, ev.gamma / 30));
+        tgtY = Math.max(-1, Math.min(1, (ev.beta - 45) / 30));
+        inside = true;
+        kick();
+      };
+      type Ctor = typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<"granted" | "denied">;
+      };
+      const C = (window as unknown as { DeviceOrientationEvent?: Ctor }).DeviceOrientationEvent;
+      if (C?.requestPermission) {
+        const grant = () => {
+          C.requestPermission?.().then((st) => {
+            if (st === "granted") window.addEventListener("deviceorientation", onOrientation);
+          });
+        };
+        window.addEventListener("touchstart", grant, { once: true });
+        detachGyro = () => {
+          window.removeEventListener("touchstart", grant);
+          window.removeEventListener("deviceorientation", onOrientation);
+        };
+      } else {
+        window.addEventListener("deviceorientation", onOrientation);
+        detachGyro = () => window.removeEventListener("deviceorientation", onOrientation);
+      }
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+      detachGyro();
+    };
+  }, []);
+
+  // ---- join ----------------------------------------------------------------
+  const postJoin = useCallback(async (mail?: string) => {
+    try {
+      const r = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ browserId: getBrowserId(), email: mail ?? null }),
+      });
+      const j = await r.json();
+      const n = Number(j?.count);
+      if (Number.isFinite(n)) {
+        setCount(n);
+        try {
+          localStorage.setItem("gyw_wl_count", String(n));
+        } catch {}
+      } else {
+        backendOk.current = false;
+      }
+    } catch {
+      backendOk.current = false;
+    }
+  }, []);
+
+  const handleJoin = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.preventDefault();
+      if (joined) {
+        // Already in — let them enjoy the confetti again, but don't recount.
+        partyPoppers();
+        return;
+      }
+      setJoined(true);
+      setAskEmail(true);
+      setCelebrate(true);
+      partyPoppers();
+
+      // Optimistic bump so the number moves instantly...
+      setCount((c) => {
+        const next = (c ?? WAITLIST_FALLBACK) + 1;
+        try {
+          localStorage.setItem("gyw_wl_joined", "1");
+          localStorage.setItem("gyw_wl_count", String(next));
+        } catch {}
+        return next;
+      });
+      // ...then reconcile with the real server total.
+      postJoin();
+      window.setTimeout(() => setCelebrate(false), 3400);
+    },
+    [joined, postJoin],
+  );
+
+  const handleSaveEmail = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+      if (!ok) return;
+      setEmailSaved(true);
+      postJoin(email.trim());
+      window.setTimeout(() => setAskEmail(false), 1600);
+    },
+    [email, postJoin],
+  );
+
+  const badge = useMemo(
+    () =>
+      celebrate ? (
+        <div className="pointer-events-none fixed inset-0 z-[2147483646] flex items-center justify-center">
+          <div className="gyw-badge flex items-center gap-2 rounded-2xl border border-accent/40 bg-ink-2/95 px-6 py-4 shadow-lift backdrop-blur">
+            <PartyPopper size={22} className="text-accent" />
+            <span className="font-display text-base font-bold text-chalk sm:text-lg">
+              You&apos;re on the list! 🎉
+            </span>
+          </div>
+        </div>
+      ) : null,
+    [celebrate],
+  );
 
   return (
     <section
       ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      style={{ ["--mx" as string]: "0", ["--my" as string]: "0" }}
+      style={{
+        ["--mx" as string]: "0",
+        ["--my" as string]: "0",
+        ["--rx" as string]: "0deg",
+        ["--ry" as string]: "0deg",
+        ["--gx" as string]: "50%",
+        ["--gy" as string]: "50%",
+      }}
       className="gyw-banner glass-strong relative mb-8 overflow-hidden rounded-3xl border border-accent/25 p-6 sm:p-10"
     >
       <style>{`
         @keyframes gyw-rise { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
         @keyframes gyw-glow { 0%,100% { opacity:.45; transform:scale(1) } 50% { opacity:.8; transform:scale(1.08) } }
         @keyframes gyw-shine { 0% { transform:translateX(-120%) } 60%,100% { transform:translateX(320%) } }
-        @keyframes gyw-count-pop { 0% { transform:scale(1) } 40% { transform:scale(1.25) } 100% { transform:scale(1) } }
         @keyframes gyw-bob { 0%,100% { transform:translateY(0) } 50% { transform:translateY(var(--bob,-6px)) } }
-        @keyframes gyw-ring-pulse { 0%,100% { opacity:.55; transform:scale(1) } 50% { opacity:.9; transform:scale(1.035) } }
+        @keyframes gyw-ring-pulse { 0%,100% { opacity:.5; transform:scale(1) } 50% { opacity:.9; transform:scale(1.03) } }
         @keyframes gyw-moon-pulse { 0%,100% { opacity:.5; transform:scale(1) } 50% { opacity:.85; transform:scale(1.15) } }
         @keyframes gyw-fog-drift { 0% { transform:translateX(-4%) } 50% { transform:translateX(4%) } 100% { transform:translateX(-4%) } }
+        @keyframes gyw-count-pop { 0% { transform:scale(1) } 40% { transform:scale(1.28) } 100% { transform:scale(1) } }
+        @keyframes gyw-scene-in { from { opacity:0; transform:translateY(30px) scale(.94) } to { opacity:1; transform:translateY(0) scale(1) } }
+        @keyframes gyw-badge-pop {
+          0% { opacity:0; transform:scale(.6) translateY(8px) }
+          16% { opacity:1; transform:scale(1.06) translateY(0) }
+          80% { opacity:1; transform:scale(1) }
+          100% { opacity:0; transform:scale(.97) }
+        }
+
         .gyw-banner .gyw-content { animation: gyw-rise .7s ease both; }
         .gyw-banner .gyw-glow { animation: gyw-glow 5s ease-in-out infinite; }
         .gyw-banner .gyw-cta:hover .gyw-shine { animation: gyw-shine 1s ease; }
         .gyw-timebox { transition: transform .2s ease; }
-        .gyw-count-bump { animation: gyw-count-pop .4s ease; }
-        .gyw-float { animation: gyw-bob var(--bob-dur,6s) ease-in-out infinite; animation-delay: var(--bob-delay,0s); }
-        .gyw-parallax { transform: translate(calc(var(--mx) * var(--depth,10) * 1px), calc(var(--my) * var(--depth,10) * 1px)) rotate(calc(var(--mx) * var(--depth,10) * 0.06deg)); transition: transform .18s ease-out; will-change: transform; }
+        .gyw-count-bump { display:inline-block; animation: gyw-count-pop .5s ease; }
+        .gyw-badge { animation: gyw-badge-pop 3.4s cubic-bezier(.22,1,.36,1) forwards; }
+
+        /* 3D stack: stage holds the perspective, tilt does the rotation. */
+        .gyw-stage { perspective: 1100px; }
+        .gyw-lift { transition: transform .6s cubic-bezier(.22,1,.36,1); transform: translateZ(0) scale(1); }
+        .gyw-banner.is-hot .gyw-lift { transform: scale(1.025); }
+        .gyw-intro { animation: gyw-scene-in 1s cubic-bezier(.22,1,.36,1) both; }
+        .gyw-tilt {
+          transform-style: preserve-3d;
+          transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+        }
+
+        /* idle bob (outer) + eased parallax slide (inner). No CSS transition on
+           the slide — the rAF spring already smooths it, so it stays butter. */
+        .gyw-float { animation: gyw-bob var(--bob-dur,6s) ease-in-out infinite; animation-delay: var(--bob-delay,0s); transform-style: preserve-3d; }
+        .gyw-parallax {
+          transform: translate3d(calc(var(--mx) * var(--depth,10) * 1px), calc(var(--my) * var(--depth,10) * 1px), 0);
+          will-change: transform;
+        }
+        /* the rock that breaks the frame gets real Z-pop so it floats over glass */
+        .gyw-pop {
+          transform: translate3d(calc(var(--mx) * var(--depth,10) * 1px), calc(var(--my) * var(--depth,10) * 1px), 60px);
+          will-change: transform;
+        }
+
         .gyw-ring { animation: gyw-ring-pulse 5s ease-in-out infinite; }
         .gyw-moon-glow { animation: gyw-moon-pulse 4.5s ease-in-out infinite; }
         .gyw-fog { animation: gyw-fog-drift 14s ease-in-out infinite; }
+
+        /* glass glare that tracks the cursor across the screen */
+        .gyw-glare {
+          position:absolute; inset:-30%;
+          background: radial-gradient(38% 38% at var(--gx,50%) var(--gy,50%), rgba(255,255,255,.22), rgba(255,255,255,.05) 45%, transparent 65%);
+          mix-blend-mode: screen; opacity:.7; pointer-events:none;
+        }
+        .gyw-spot {
+          position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .5s ease;
+          background: radial-gradient(300px 300px at var(--gx,50%) var(--gy,50%), rgb(var(--accent) / .10), transparent 70%);
+        }
+        .gyw-banner.is-hot .gyw-spot { opacity:1; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .gyw-float, .gyw-ring, .gyw-moon-glow, .gyw-fog, .gyw-tilt, .gyw-intro, .gyw-content { animation: none !important; }
+          .gyw-parallax, .gyw-pop { transform: none !important; }
+          .gyw-tilt { transform: none !important; }
+        }
       `}</style>
 
-      {/* glowing accent blobs */}
+      {/* ambient glow blobs + cursor spotlight */}
       <div className="gyw-glow pointer-events-none absolute -right-10 -top-16 h-72 w-72 rounded-full bg-accent/25 blur-3xl" />
       <div
         className="gyw-glow pointer-events-none absolute -bottom-24 left-1/4 h-56 w-56 rounded-full bg-accent/10 blur-3xl"
         style={{ animationDelay: "1.5s" }}
       />
+      <div className="gyw-spot" />
 
-      <ConfettiOverlay show={celebrate} />
+      {badge}
 
       {/* ---------- TOP: copy + phone mockup ---------- */}
       <div className="gyw-content relative flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
@@ -278,7 +494,6 @@ export function ParallaxAppBanner() {
             your phone. No videos. No GIFs. Pure 3D depth.
           </p>
 
-          {/* feature badges */}
           <div className="mt-6 flex flex-wrap gap-2.5">
             {FEATURES.map(({ icon: Icon, label }) => (
               <span
@@ -292,107 +507,114 @@ export function ParallaxAppBanner() {
           </div>
         </div>
 
-        {/* hero art — layered depth: sky, mountains, pagoda island, tree island each parallax independently */}
-        <div className="relative mx-auto w-full max-w-[420px] shrink-0 pb-6 sm:max-w-[460px] lg:max-w-[500px]">
-          {/* glowing ring, behind the phone */}
-          <div className="gyw-ring pointer-events-none absolute inset-[4%] rounded-full border border-accent/40" />
-          <div className="gyw-ring pointer-events-none absolute inset-[4%] -z-10 rounded-full bg-accent/20 blur-3xl" />
+        {/* hero art — 3D layered depth */}
+        <div className="gyw-stage relative mx-auto w-full max-w-[420px] shrink-0 pb-6 sm:max-w-[460px] lg:max-w-[500px]">
+          <div className="gyw-lift">
+            <div className="gyw-intro">
+              <div className="gyw-tilt relative">
+              {/* glowing ring behind the phone */}
+              <div className="gyw-ring pointer-events-none absolute inset-[4%] rounded-full border border-accent/40" />
+              <div className="gyw-ring pointer-events-none absolute inset-[4%] -z-10 rounded-full bg-accent/20 blur-3xl" />
 
-          {/* phone frame — clips the layered scene */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-[9%] border-[5px] border-white/10 bg-[#050a10] shadow-2xl">
-            {/* sky + moon (back-most, opaque) */}
-            <div className="gyw-float absolute inset-0" style={{ ["--bob-dur" as string]: "9s", ["--bob" as string]: "-3px" }}>
-              <div className="gyw-parallax relative h-full w-full" style={{ ["--depth" as string]: 4 }}>
-                <Image
-                  src="/images/parallax-layers/sky.png"
-                  alt="Starry night sky with a full moon"
-                  fill
-                  className="object-cover object-[60%_28%] scale-110"
-                  sizes="500px"
-                  priority
-                />
+              {/* phone frame clips the layered scene */}
+              <div className="relative aspect-square w-full overflow-hidden rounded-[9%] border-[5px] border-white/10 bg-[#050a10] shadow-2xl">
+                {/* sky + moon (back-most) */}
+                <div className="gyw-float absolute inset-0" style={{ ["--bob-dur" as string]: "9s", ["--bob" as string]: "-3px" }}>
+                  <div className="gyw-parallax relative h-full w-full" style={{ ["--depth" as string]: 4 }}>
+                    <Image
+                      src="/images/parallax-layers/sky.png"
+                      alt="Starry night sky with a full moon"
+                      fill
+                      className="scale-110 object-cover object-[60%_28%]"
+                      sizes="500px"
+                      priority
+                    />
+                  </div>
+                </div>
+
+                <div className="gyw-moon-glow pointer-events-none absolute left-[46%] top-[14%] h-20 w-20 -translate-x-1/2 rounded-full bg-white/70 blur-2xl" />
+
+                {/* mountains */}
+                <div className="gyw-float absolute inset-x-0 bottom-[6%]" style={{ ["--bob-dur" as string]: "7s", ["--bob-delay" as string]: "0.3s", ["--bob" as string]: "-5px" }}>
+                  <div className="gyw-parallax relative mx-auto aspect-[3/2] w-[96%]" style={{ ["--depth" as string]: 12 }}>
+                    <Image
+                      src="/images/parallax-layers/mountains.png"
+                      alt="Layered dark mountain silhouettes"
+                      fill
+                      className="object-contain object-bottom"
+                      sizes="500px"
+                    />
+                  </div>
+                </div>
+
+                {/* pagoda island (left) */}
+                <div className="gyw-float absolute bottom-[3%] left-[-8%] w-[56%]" style={{ ["--bob-dur" as string]: "6s", ["--bob-delay" as string]: "0.6s", ["--bob" as string]: "-8px" }}>
+                  <div className="gyw-parallax relative aspect-[3/2] w-full" style={{ ["--depth" as string]: 20 }}>
+                    <Image
+                      src="/images/parallax-layers/pagoda-island.png"
+                      alt="Floating island with a lit pagoda and a blossom tree"
+                      fill
+                      className="object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                      sizes="300px"
+                    />
+                  </div>
+                </div>
+
+                {/* tree island (right) */}
+                <div className="gyw-float absolute bottom-[1%] right-[-10%] w-[58%]" style={{ ["--bob-dur" as string]: "6.5s", ["--bob-delay" as string]: "0.15s", ["--bob" as string]: "-7px" }}>
+                  <div className="gyw-parallax relative aspect-[19/20] w-full" style={{ ["--depth" as string]: 24 }}>
+                    <Image
+                      src="/images/parallax-layers/main-island.png"
+                      alt="Floating island with blossom trees"
+                      fill
+                      className="object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                      sizes="300px"
+                    />
+                  </div>
+                </div>
+
+                {/* drifting fog */}
+                <div className="gyw-fog pointer-events-none absolute inset-x-[-10%] bottom-0 h-[22%] bg-gradient-to-t from-[#0d1a1e] via-[#0d1a1e]/60 to-transparent blur-md" />
+
+                {/* cursor-tracked glass glare */}
+                <div className="gyw-glare" />
+
+                {/* cohesion vignette + notch */}
+                <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_60px_25px_rgba(0,0,0,0.55)]" />
+                <div className="absolute left-1/2 top-1 h-3 w-14 -translate-x-1/2 rounded-full bg-black/70" />
+              </div>
+
+              {/* rock that pops OUT of the frame — front-most, floats above glass */}
+              <div
+                className="gyw-float absolute -bottom-2 left-[6%] z-20 w-[26%] drop-shadow-[0_18px_22px_rgba(0,0,0,0.6)]"
+                style={{ ["--bob-dur" as string]: "5s", ["--bob-delay" as string]: "0.4s", ["--bob" as string]: "-10px" }}
+              >
+                <div className="gyw-pop relative aspect-[15/14] w-full" style={{ ["--depth" as string]: 34 }}>
+                  <Image
+                    src="/images/parallax-layers/small-island.png"
+                    alt="A small floating rock island"
+                    fill
+                    className="object-contain"
+                    sizes="140px"
+                  />
+                </div>
+              </div>
+
+              {/* coming soon bubble */}
+              <div className="absolute right-2 top-6 z-20 flex items-center gap-1.5 rounded-2xl rounded-bl-sm border border-accent/30 bg-ink-2/95 px-3 py-2 shadow-lift backdrop-blur sm:right-6">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-accent">
+                  Coming Soon
+                </span>
+                <Play size={11} className="text-chalk-muted" />
+                <Apple size={12} className="text-chalk-muted" />
+              </div>
               </div>
             </div>
-
-            {/* moon glow bloom */}
-            <div className="gyw-moon-glow pointer-events-none absolute left-[46%] top-[14%] h-20 w-20 -translate-x-1/2 rounded-full bg-white/70 blur-2xl" />
-
-            {/* mountains */}
-            <div className="gyw-float absolute inset-x-0 bottom-[6%]" style={{ ["--bob-dur" as string]: "7s", ["--bob-delay" as string]: "0.3s", ["--bob" as string]: "-5px" }}>
-              <div className="gyw-parallax relative mx-auto aspect-[3/2] w-[96%]" style={{ ["--depth" as string]: 12 }}>
-                <Image
-                  src="/images/parallax-layers/mountains.png"
-                  alt="Layered dark mountain silhouettes"
-                  fill
-                  className="object-contain object-bottom"
-                  sizes="500px"
-                />
-              </div>
-            </div>
-
-            {/* pagoda island (left) */}
-            <div className="gyw-float absolute bottom-[3%] left-[-8%] w-[56%]" style={{ ["--bob-dur" as string]: "6s", ["--bob-delay" as string]: "0.6s", ["--bob" as string]: "-8px" }}>
-              <div className="gyw-parallax relative aspect-[3/2] w-full" style={{ ["--depth" as string]: 20 }}>
-                <Image
-                  src="/images/parallax-layers/pagoda-island.png"
-                  alt="Floating island with a lit pagoda and a blossom tree"
-                  fill
-                  className="object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
-                  sizes="300px"
-                />
-              </div>
-            </div>
-
-            {/* tree island (right) */}
-            <div className="gyw-float absolute bottom-[1%] right-[-10%] w-[58%]" style={{ ["--bob-dur" as string]: "6.5s", ["--bob-delay" as string]: "0.15s", ["--bob" as string]: "-7px" }}>
-              <div className="gyw-parallax relative aspect-[19/20] w-full" style={{ ["--depth" as string]: 24 }}>
-                <Image
-                  src="/images/parallax-layers/main-island.png"
-                  alt="Floating island with blossom trees"
-                  fill
-                  className="object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
-                  sizes="300px"
-                />
-              </div>
-            </div>
-
-            {/* drifting fog at the base */}
-            <div className="gyw-fog pointer-events-none absolute inset-x-[-10%] bottom-0 h-[22%] bg-gradient-to-t from-[#0d1a1e] via-[#0d1a1e]/60 to-transparent blur-md" />
-
-            {/* cohesion vignette */}
-            <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_60px_25px_rgba(0,0,0,0.55)]" />
-            {/* top notch */}
-            <div className="absolute left-1/2 top-1 h-3 w-14 -translate-x-1/2 rounded-full bg-black/70" />
-          </div>
-
-          {/* small island popping out past the frame — strongest parallax, front-most */}
-          <div
-            className="gyw-float absolute -bottom-2 left-[6%] z-20 w-[26%] drop-shadow-[0_14px_18px_rgba(0,0,0,0.55)]"
-            style={{ ["--bob-dur" as string]: "5s", ["--bob-delay" as string]: "0.4s", ["--bob" as string]: "-10px" }}
-          >
-            <div className="gyw-parallax relative aspect-[15/14] w-full" style={{ ["--depth" as string]: 34 }}>
-              <Image
-                src="/images/parallax-layers/small-island.png"
-                alt="A small floating rock island"
-                fill
-                className="object-contain"
-                sizes="140px"
-              />
-            </div>
-          </div>
-
-          {/* coming soon chat bubble */}
-          <div className="absolute right-2 top-6 z-20 flex items-center gap-1.5 rounded-2xl rounded-bl-sm border border-accent/30 bg-ink-2/95 px-3 py-2 shadow-lift backdrop-blur sm:right-6">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-accent">
-              Coming Soon
-            </span>
-            <Play size={11} className="text-chalk-muted" />
-            <Apple size={12} className="text-chalk-muted" />
           </div>
         </div>
       </div>
 
-      {/* ---------- BOTTOM: waitlist strip + countdown + store badges ---------- */}
+      {/* ---------- BOTTOM: waitlist + countdown + store badges ---------- */}
       <div className="relative mt-8 flex flex-col gap-5 border-t border-line pt-6 lg:flex-row lg:items-center lg:justify-between">
         {/* waitlist box */}
         <div className="flex flex-col gap-4 rounded-2xl border border-line bg-ink-2/60 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
@@ -413,31 +635,58 @@ export function ParallaxAppBanner() {
                     />
                   ))}
                 </div>
-                <span key={count} className="gyw-count-bump text-xs text-accent">
-                  {count.toLocaleString()}{" "}
+                <span className="text-xs text-accent">
+                  <span key={count ?? 0} className="gyw-count-bump font-semibold tabular-nums">
+                    {shownCount.toLocaleString()}
+                  </span>{" "}
                   <span className="text-chalk-faint">people already joined</span>
                 </span>
               </div>
+
+              {/* optional email capture appears after joining */}
+              {askEmail && !emailSaved && (
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveEmail(e as unknown as React.MouseEvent);
+                    }}
+                    placeholder="Email for a launch-day reminder (optional)"
+                    className="focusable h-9 w-full min-w-0 rounded-full border border-line bg-ink px-4 text-xs text-chalk placeholder:text-chalk-faint sm:w-64"
+                  />
+                  <button
+                    onClick={handleSaveEmail}
+                    className="btn-accent focusable inline-flex h-9 shrink-0 items-center rounded-full px-4 text-xs font-bold"
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+              {emailSaved && (
+                <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-accent">
+                  <Check size={13} /> We&apos;ll ping you on launch day.
+                </p>
+              )}
             </div>
           </div>
 
-          <Link
-            href={WAITLIST_LINK}
-            onClick={handleJoinWaitlist}
-            aria-disabled={joined}
-            className="gyw-cta btn-accent focusable relative inline-flex h-11 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold disabled:opacity-70"
+          <button
+            onClick={handleJoin}
+            className="gyw-cta btn-accent focusable relative inline-flex h-11 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold"
           >
             <span className="gyw-shine pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25" />
             {joined ? (
               <>
-                You're in! <PartyPopper size={15} />
+                You&apos;re in! <PartyPopper size={15} />
               </>
             ) : (
               <>
                 Join Waitlist <ArrowRight size={15} />
               </>
             )}
-          </Link>
+          </button>
         </div>
 
         {/* countdown */}
